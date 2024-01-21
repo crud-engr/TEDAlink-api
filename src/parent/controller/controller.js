@@ -145,7 +145,7 @@ class ParentController {
       const { email } = req.body;
 
       const otp = Util.generateOTP();
-      console.log('OTP: ', otp);
+      console.log('ACCOUNT ACTIVATION OTP: ', otp);
 
       // Encrypt otp
       const encryptedOtp = crypto
@@ -367,7 +367,7 @@ class ParentController {
       }
 
       const otp = Util.generateOTP();
-      console.log('OTP: ', otp);
+      console.log('PASSWORD RESET OTP: ', otp);
 
       // hash otp -> otp expires in 10 mins
       const hash = jwt.sign({ otp, email }, process.env.JWT_SECRET_KEY, {
