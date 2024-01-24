@@ -7,9 +7,11 @@ const moment = require('moment');
 const rateLimit = require('express-rate-limit');
 const xss = require('xss-clean');
 const mongoSanitize = require('express-mongo-sanitize');
+const fileUpload = require('express-fileupload');
 
 const { connect } = require('./src/database/connect');
 const parentRoute = require('./src/parent/route/route');
+const schoolOwnerRoute = require('./src/school/route/schoolOwner');
 const log = require('./src/common/logger/logger');
 require('dotenv').config();
 const { PORT, NODE_ENV } = process.env;
@@ -17,6 +19,7 @@ const { PORT, NODE_ENV } = process.env;
 // start express app
 const app = express();
 app.use(cors());
+app.use(fileUpload());
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan('combined'));
@@ -62,6 +65,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/v1/parents', parentRoute);
+app.use('/api/v1/school-owners', schoolOwnerRoute);
 
 // Non existed routes fallback
 app.all('*', (req, res) => {
