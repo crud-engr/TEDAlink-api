@@ -4,11 +4,12 @@ const moment = require('moment');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
-const Parent = require('../model/Parent');
-const Otp = require('../model/Otp');
+const Otp = require('../model/SchoolOwnerOtp');
 const Util = require('../../common/utils/util');
+const SchoolOwnerOtp = require('../model/SchoolOwnerOtp');
+const SchoolOwner = require('../model/SchoolOwner');
 
-class ParentController {
+class SchoolOwnerController {
   async signup(req, res) {
     try {
       const rules = {
@@ -43,28 +44,28 @@ class ParentController {
         userName,
       } = req.body;
 
-      const emailExist = await Parent.findOne({ email });
+      const emailExist = await SchoolOwner.findOne({ email });
       if (emailExist && emailExist !== null) {
         return res.status(400).json({
           status: 'failed',
-          message: `Parent with ${email} already exists`,
+          message: `School owner with ${email} already exists`,
         });
       }
-      const phoneExist = await Parent.findOne({ phone });
+      const phoneExist = await SchoolOwner.findOne({ phone });
       if (phoneExist && phoneExist !== null) {
         return res.status(400).json({
           status: 'failed',
-          message: `Parent with ${phone} already exists`,
+          message: `School owner with ${phone} already exists`,
         });
       }
-      const userNameExist = await Parent.findOne({ userName });
+      const userNameExist = await SchoolOwner.findOne({ userName });
       if (userNameExist && userNameExist !== null) {
         return res.status(400).json({
           status: 'failed',
-          message: `Parent with ${userName} already exists`,
+          message: `School owner with ${userName} already exists`,
         });
       }
-      const IsEmailVerified = await Otp.findOne({ email });
+      const IsEmailVerified = await SchoolOwnerOtp.findOne({ email });
       if (!IsEmailVerified) {
         return res.status(400).json({
           status: 'failed',
@@ -73,11 +74,11 @@ class ParentController {
       }
       if (
         IsEmailVerified.emailIsVerified === false ||
-        IsEmailVerified.userType !== 'parent'
+        IsEmailVerified.userType !== 'school-owner'
       ) {
         return res.status(400).json({
           status: 'failed',
-          message: 'Parent is not verified',
+          message: 'School owner is not verified',
         });
       }
       if (!Util.isPasswordValid(password)) {
@@ -93,7 +94,7 @@ class ParentController {
         });
       }
       const hash = await bcrypt.hash(password, 10);
-      const parent = new Parent({
+      const schoolOwner = new SchoolOwner({
         email,
         phone,
         firstName,
@@ -102,32 +103,32 @@ class ParentController {
         state,
         userName,
       });
-      await parent.save();
-      const parentData = {
-        _id: parent._id,
-        email: parent.email,
-        userType: parent.userType,
-        phone: parent.phone,
+      await schoolOwner.save();
+      const schoolOwnerData = {
+        _id: schoolOwner._id,
+        email: schoolOwner.email,
+        userType: schoolOwner.userType,
+        phone: schoolOwner.phone,
       };
-      const token = Util.signJWT(parentData);
+      const token = Util.signJWT(schoolOwnerData);
       return res.status(201).json({
         status: 'success',
-        message: 'Parent successfully created',
+        message: 'School owner successfully created',
         data: {
           token,
-          parent,
+          schoolOwner,
         },
       });
     } catch (error) {
-      console.log('Create Parent Error:', error.message);
+      console.log('Create School Owner Error:', error.message);
       return res.status(500).json({
         status: 'failed',
-        message: 'Unable to create parent',
+        message: 'Unable to create school owner',
       });
     }
   }
 
-  async sendOTP(req, res) {
+  async sendSchoolOwnerOTP(req, res) {
     try {
       const rules = {
         email: 'required|email',
@@ -144,8 +145,8 @@ class ParentController {
       }
       const { email } = req.body;
 
-      // const otp = Util.generateOTP();
-      const otp = '656565';
+      const otp = Util.generateOTP();
+      console.log('SCHOOL OWNER ACCOUNT ACTIVATION OTP: ', otp);
 
       // Encrypt otp
       const encryptedOtp = crypto
@@ -155,19 +156,19 @@ class ParentController {
 
       const emailOtpExist = await Otp.findOne({ email });
 
-      if (!emailOtpExist || emailOtpExist.userType !== 'parent') {
-        await Otp.create({
+      if (!emailOtpExist || emailOtpExist.userType != 'school-onwer') {
+        await SchoolOwnerOtp.create({
           email,
           expired: false,
           otp: encryptedOtp,
           expiresIn: moment().add('10', 'minutes'),
-          userType: 'parent',
+          userType: 'school-owner',
         });
       }
 
-      if (emailOtpExist && emailOtpExist.userType === 'parent') {
+      if (emailOtpExist && emailOtpExist.userType === 'school-owner') {
         // Upate otp
-        await Otp.findOneAndUpdate(
+        await SchoolOwnerOtp.findOneAndUpdate(
           { email },
           {
             $set: {
@@ -184,7 +185,7 @@ class ParentController {
         message: 'OTP successfully sent',
       });
     } catch (error) {
-      console.log('Send Parent Otp Error:', error.message);
+      console.log('Send School Owner Otp Error:', error.message);
       return res.status(500).json({
         status: 'failed',
         message: 'Unable to send otp',
@@ -192,7 +193,7 @@ class ParentController {
     }
   }
 
-  async verifyOTP(req, res) {
+  async verifySchoolOwnerOTP(req, res) {
     try {
       const rules = {
         email: 'required|email',
@@ -209,9 +210,9 @@ class ParentController {
       }
 
       const { email, otp } = req.body;
-      const emailOtpRecord = await Otp.findOne({
+      const emailOtpRecord = await SchoolOwnerOtp.findOne({
         email,
-        userType: 'parent',
+        userType: 'school-owner',
       });
       if (!emailOtpRecord) {
         return res.status(404).json({
@@ -240,7 +241,7 @@ class ParentController {
         });
       }
 
-      await Otp.findOneAndUpdate(
+      await SchoolOwnerOtp.findOneAndUpdate(
         { email, otp: foundOtp.otp, expired: false },
         {
           $set: {
@@ -257,7 +258,7 @@ class ParentController {
         message: 'OTP successfully verified',
       });
     } catch (error) {
-      console.log('Error Verifying Parent OTP: ', error.message);
+      console.log('Error Verifying School Owner OTP: ', error.message);
       return res.status(500).json({
         status: 'failed',
         message: 'Unable to verify otp',
@@ -283,15 +284,15 @@ class ParentController {
       }
       const { email, password } = req.body;
 
-      const parent = await Parent.findOne({ email });
-      if (!parent) {
+      const schoolOwner = await SchoolOwner.findOne({ email });
+      if (!schoolOwner) {
         return res.status(404).json({
           status: 'failed',
           message: 'wrong email or password',
         });
       }
 
-      const validPassword = await bcrypt.compare(password, parent.password);
+      const validPassword = await bcrypt.compare(password, schoolOwner.password);
       if (validPassword === false) {
         return res.status(422).json({
           status: 'failed',
@@ -299,43 +300,43 @@ class ParentController {
         });
       }
 
-      const isParentActive = parent.isActive === true
-      if (!isParentActive) {
+      const isSchoolOwnerActive = schoolOwner.isActive === true
+      if (!isSchoolOwnerActive) {
         return res.status(403).json({
           status: 'failed',
           message: `Account is not active`,
         });
       }
 
-      const isUserTypeParent = parent.userType === 'parent'
-      if (!isUserTypeParent) {
+      const isUserTypeSchoolOwner = schoolOwner.userType === 'school-owner';
+      if (!isUserTypeSchoolOwner) {
         return res.status(403).json({
           status: 'failed',
           message: `No permission to access this resource.`,
         });
       }
 
-      const parentData = {
-        id: parent._id,
-        email: parent.email,
-        userType: parent.userType,
-        phone: parent.phone,
+      const schoolOwnerData = {
+        id: schoolOwner._id,
+        email: schoolOwner.email,
+        userType: schoolOwner.userType,
+        phone: schoolOwner.phone,
       };
 
-      const token = Util.signJWT(parentData);
+      const token = Util.signJWT(schoolOwnerData);
       return res.status(200).json({
         status: 'success',
-        message: 'Parent logged in successfully',
+        message: 'Successfully logged in',
         data: {
           token,
-          parent,
+          schoolOwner,
         },
       });
     } catch (error) {
-      console.log('Parent Login Error: ', error);
+      console.log('School Owner Login Error: ', error);
       return res.status(500).json({
         status: 'failed',
-        message: 'Unable to login parent',
+        message: 'Unable to login school owner',
       });
     }
   }
@@ -357,25 +358,25 @@ class ParentController {
       }
 
       const { email } = req.body;
-      const parent = await Parent.findOne({ email });
+      const schoolOwner = await SchoolOwner.findOne({ email });
 
-      if (!parent) {
+      if (!schoolOwner) {
         return res.status(404).json({
           status: 'failed',
-          message: 'Parent does not exist',
+          message: 'School owner does not exist',
         });
       }
 
       const otp = Util.generateOTP();
-      console.log('PASSWORD RESET OTP: ', otp);
+      console.log('SCHOOL OWNER PASSWORD RESET OTP: ', otp);
 
       // hash otp -> otp expires in 10 mins
       const hash = jwt.sign({ otp, email }, process.env.JWT_SECRET_KEY, {
         expiresIn: '10m',
       });
 
-      parent.resetPasswordToken = hash;
-      await parent.save();
+      schoolOwner.resetPasswordToken = hash;
+      await schoolOwner.save();
 
       // Send otp to parent mail
       //   const payload = {
@@ -419,18 +420,18 @@ class ParentController {
       }
       const { password, confirmPassword, otp, email } = req.body;
 
-      const parent = await Parent.findOne({ email });
+      const schoolOwner = await SchoolOwner.findOne({ email });
 
-      if (!parent) {
+      if (!schoolOwner) {
         return res.status(404).json({
           status: 'failed',
-          message: 'Invalid parent',
+          message: 'Invalid school owner',
         });
       }
 
       // Verify otp
       const decodedOTP = jwt.verify(
-        parent.resetPasswordToken,
+        schoolOwner.resetPasswordToken,
         process.env.JWT_SECRET_KEY,
       );
 
@@ -464,10 +465,10 @@ class ParentController {
       }
 
       // Check if user.password field exists, if not, use the provided password
-      if (!parent.password) {
-        parent.password = await bcrypt.hash(password, 10);
+      if (!schoolOwner.password) {
+        schoolOwner.password = await bcrypt.hash(password, 10);
       } else {
-        const isMatch = await bcrypt.compare(password, parent.password);
+        const isMatch = await bcrypt.compare(password, schoolOwner.password);
 
         if (isMatch) {
           return res.status(400).json({
@@ -476,11 +477,11 @@ class ParentController {
           });
         }
 
-        parent.password = await bcrypt.hash(password, 10);
+        schoolOwner.password = await bcrypt.hash(password, 10);
       }
 
-      parent.lastPasswordChangeDate = Date.now();
-      await parent.save();
+      schoolOwner.lastPasswordChangeDate = Date.now();
+      await schoolOwner.save();
 
       //   const payload = {
       //     email,
@@ -510,4 +511,4 @@ class ParentController {
   };
 }
 
-module.exports = new ParentController();
+module.exports = new SchoolOwnerController();
