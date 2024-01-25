@@ -131,6 +131,7 @@ class ParentController {
     try {
       const rules = {
         email: 'required|email',
+        phone: 'required|string',
       };
 
       const validation = new Validator(req.body, rules);
@@ -143,6 +144,22 @@ class ParentController {
         });
       }
       const { email } = req.body;
+      const emailExist = await Parent.findOne({ email });
+      if (emailExist && emailExist !== null) {
+        return res.status(400).json({
+          status: 'failed',
+          message: `Email already exists`,
+        });
+      }
+
+      const { phone } = req.body;
+      const phoneExist = await Parent.findOne({ phone });
+      if (phoneExist && phoneExist !== null) {
+        return res.status(400).json({
+          status: 'failed',
+          message: `Phone already exists`,
+        });
+      }
 
       // const otp = Util.generateOTP();
       const otp = '656565';
@@ -153,11 +170,12 @@ class ParentController {
         .update(otp)
         .digest('hex');
 
-      const emailOtpExist = await Otp.findOne({ email });
+      const emailOtpExist = await Otp.findOne({ email, phone });
 
       if (!emailOtpExist || emailOtpExist.userType !== 'parent') {
         await Otp.create({
           email,
+          phone,
           expired: false,
           otp: encryptedOtp,
           expiresIn: moment().add('10', 'minutes'),
@@ -168,7 +186,7 @@ class ParentController {
       if (emailOtpExist && emailOtpExist.userType === 'parent') {
         // Upate otp
         await Otp.findOneAndUpdate(
-          { email },
+          { email, phone },
           {
             $set: {
               expired: false,
