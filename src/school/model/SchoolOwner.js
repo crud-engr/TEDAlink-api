@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const ParentSchema = new Schema(
+const SchoolOwnerSchema = new Schema(
   {
     firstName: {
       type: String,
@@ -34,7 +34,7 @@ const ParentSchema = new Schema(
     },
     userType: {
       type: String,
-      default: 'parent',
+      default: 'school-owner',
     },
     isActive: {
       type: Boolean,
@@ -56,12 +56,12 @@ const ParentSchema = new Schema(
   },
 );
 
-ParentSchema.set('toJSON', {
+SchoolOwnerSchema.set('toJSON', {
   transform: (doc, ret) => {
     delete ret.__v;
     return ret;
   },
 });
 
-const Parent = mongoose.model('Parent', ParentSchema);
-module.exports = Parent;
+const SchoolOwner = mongoose.model('SchoolOwner', SchoolOwnerSchema);
+module.exports = SchoolOwner;

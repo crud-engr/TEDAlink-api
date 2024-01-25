@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-const OtpSchema = new Schema(
+const SchoolOwnerOtpSchema = new Schema(
   {
     otp: {
       type: String,
@@ -9,10 +9,6 @@ const OtpSchema = new Schema(
     },
     email: {
       type: String,
-    },
-    phone: {
-      type: String,
-      required: true
     },
     expiresIn: Date,
     expired: {
@@ -29,9 +25,9 @@ const OtpSchema = new Schema(
   },
   { timestamps: true },
 );
-module.exports = mongoose.model('Otp', OtpSchema);
+module.exports = mongoose.model('SchoolOwnerOtp', SchoolOwnerOtpSchema);
 
-OtpSchema.set('toJSON', {
+SchoolOwnerOtpSchema.set('toJSON', {
   transform: (doc, ret) => {
     delete ret.__v;
     return ret;
