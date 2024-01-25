@@ -10,6 +10,10 @@ const OtpSchema = new Schema(
     email: {
       type: String,
     },
+    phone: {
+      type: String,
+      required: true
+    },
     expiresIn: Date,
     expired: {
       type: Boolean,

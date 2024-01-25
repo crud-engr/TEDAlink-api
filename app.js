@@ -76,7 +76,6 @@ app.all('*', (req, res) => {
 });
 
 app.listen(PORT, async () => {
-  log.info(`Application mode: ${NODE_ENV}`);
   log.info(`Server running on port: ${PORT || 3000}`);
   await connect();
 });
