@@ -7,6 +7,8 @@ const bcrypt = require('bcryptjs');
 const Parent = require('../model/Parent');
 const Otp = require('../model/Otp');
 const Util = require('../../common/utils/util');
+const School = require('../../school/model/School');
+const { isValidObjectId } = require('mongoose');
 
 class ParentController {
   async signup(req, res) {
@@ -143,7 +145,7 @@ class ParentController {
           errors: validation.errors.all(),
         });
       }
-      const { email } = req.body;
+      const { email, phone } = req.body;
       const emailExist = await Parent.findOne({ email });
       if (emailExist && emailExist !== null) {
         return res.status(400).json({
@@ -152,7 +154,6 @@ class ParentController {
         });
       }
 
-      const { phone } = req.body;
       const phoneExist = await Parent.findOne({ phone });
       if (phoneExist && phoneExist !== null) {
         return res.status(400).json({
@@ -358,7 +359,7 @@ class ParentController {
     }
   }
 
-  initiatePasswordReset = async (req, res) => {
+  async initiatePasswordReset (req, res) {
     try {
       const rules = {
         email: 'required|email',
@@ -417,7 +418,7 @@ class ParentController {
     }
   };
 
-  setNewPassword = async (req, res) => {
+  async setNewPassword (req, res) {
     try {
       const rules = {
         password: 'required|string',
@@ -526,6 +527,70 @@ class ParentController {
       }
     }
   };
+
+  // Fetch schools
+  async getSchools(req, res) {
+    try {
+      const schools = await School.find();
+
+      if (schools.length === 0) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'No schools found',
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'Schools retrieved',
+        data: {
+          schools,
+        },
+      });
+    } catch (error) {
+      console.log('Fetch Schools Error:', error.message);
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to fetch schools',
+      });
+    }
+  }
+
+  // Fetch school
+  async getSchool(req, res) {
+    try {
+      let { schoolId } = req.params;
+      if (!isValidObjectId(schoolId)) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Invalid school ID',
+        });
+      }
+      const school = await School.findById(schoolId);
+      if (!school) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'School not found',
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'School retrieved',
+        data: {
+          school,
+        },
+      });
+    } catch (error) {
+      console.log('Fetch School Error:', error.message);
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to fetch school',
+      });
+    }
+  }
+
+
 }
 
 module.exports = new ParentController();
