@@ -132,6 +132,7 @@ class SchoolOwnerController {
     try {
       const rules = {
         email: 'required|email',
+        phone: 'required|string',
       };
 
       const validation = new Validator(req.body, rules);
@@ -143,7 +144,22 @@ class SchoolOwnerController {
           errors: validation.errors.all(),
         });
       }
-      const { email } = req.body;
+      const { email, phone } = req.body;
+      const emailExist = await SchoolOwner.findOne({ email });
+      if (emailExist && emailExist !== null) {
+        return res.status(400).json({
+          status: 'failed',
+          message: `Email already exists`,
+        });
+      }
+
+      const phoneExist = await SchoolOwner.findOne({ phone });
+      if (phoneExist && phoneExist !== null) {
+        return res.status(400).json({
+          status: 'failed',
+          message: `Phone already exists`,
+        });
+      }
 
       // const otp = Util.generateOTP();
       const otp = '656565'
@@ -155,11 +171,12 @@ class SchoolOwnerController {
         .update(otp)
         .digest('hex');
 
-      const emailOtpExist = await Otp.findOne({ email });
+      const emailOtpExist = await Otp.findOne({ email, phone });
 
       if (!emailOtpExist || emailOtpExist.userType != 'school-onwer') {
         await SchoolOwnerOtp.create({
           email,
+          phone,
           expired: false,
           otp: encryptedOtp,
           expiresIn: moment().add('10', 'minutes'),
@@ -170,7 +187,7 @@ class SchoolOwnerController {
       if (emailOtpExist && emailOtpExist.userType === 'school-owner') {
         // Upate otp
         await SchoolOwnerOtp.findOneAndUpdate(
-          { email },
+          { email, phone },
           {
             $set: {
               expired: false,
