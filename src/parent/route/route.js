@@ -1,5 +1,5 @@
 const express = require('express');
-const ParentController = require('../controller/controller');
+const ParentController = require('../controller/parent.js');
 const auth = require('../middleware');
 
 const router = express.Router();
@@ -13,5 +13,6 @@ router.patch('/auth/set-new-password', ParentController.setNewPassword);
 
 router.get('/schools', auth, ParentController.getSchools);
 router.get('/schools/:schoolId', auth, ParentController.getSchool);
+router.post('/schools/:schoolId/enquiry', auth, ParentController.sendSchoolEnquiry);
 
 module.exports = router;

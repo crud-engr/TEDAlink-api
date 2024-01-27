@@ -14,8 +14,10 @@ router.patch('/auth/set-new-password', SchoolOwnerController.setNewPassword);
 
 router.post('/schools', auth, SchoolController.createSchool);
 router.get('/schools', auth, SchoolController.getSchools);
-router.get('/school/:schoolId', auth, SchoolController.getSchool);
-router.patch('/school/:schoolId', auth, SchoolController.updateSchool);
-router.delete('/school/:schoolId', auth, SchoolController.deleteSchool);
+router.get('/schools/:schoolId', auth, SchoolController.getSchool);
+router.patch('/schools/:schoolId', auth, SchoolController.updateSchool);
+router.delete('/schools/:schoolId', auth, SchoolController.deleteSchool);
+
+router.get('/schools/:schoolId/enquiries', auth, SchoolOwnerController.getEnquiries);
 
 module.exports = router;

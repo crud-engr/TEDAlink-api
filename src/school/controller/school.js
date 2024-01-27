@@ -127,7 +127,7 @@ class SchoolController {
   async getSchools(req, res) {
     try {
       const { _id } = req.schoolOwner;
-      const schools = await School.find({ schoolOwner: _id });
+      const schools = await School.find({ schoolOwner: _id }).sort({ createdAt: -1 });
 
       if (schools.length === 0) {
         return res.status(404).json({

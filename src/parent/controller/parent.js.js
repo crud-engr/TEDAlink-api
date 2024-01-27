@@ -9,6 +9,7 @@ const Otp = require('../model/Otp');
 const Util = require('../../common/utils/util');
 const School = require('../../school/model/School');
 const { isValidObjectId } = require('mongoose');
+const Enquiry = require('../model/Enquiry');
 
 class ParentController {
   async signup(req, res) {
@@ -531,7 +532,7 @@ class ParentController {
   // Fetch schools
   async getSchools(req, res) {
     try {
-      const schools = await School.find();
+      const schools = await School.find().sort({ createdAt: -1 });
 
       if (schools.length === 0) {
         return res.status(404).json({
@@ -590,7 +591,83 @@ class ParentController {
     }
   }
 
+  async sendSchoolEnquiry(req, res) {
+    try {
+      const rules = {
+        fullName: 'required|string',
+        email: 'required|string',
+        phone: 'required|string',
+        location: 'required|string',
+        subject: 'required|string',
+        message: 'required|string',
+      };
 
+      const validation = new Validator(req.body, rules);
+
+      if (validation.fails()) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Validation Errors',
+          errors: validation.errors.all(),
+        });
+      }
+
+      const { schoolId } = req.params;
+
+      if(!isValidObjectId(schoolId)) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Invalid school',
+        });
+      }
+
+      const school = await School.findById(schoolId);
+      if (!school) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'School not found',
+        });
+      }
+
+      const {
+        fullName,
+        email,
+        phone,
+        location,
+        subject,
+        message,
+      } = req.body;
+
+      const equiry = new Enquiry({
+        parentId: req.parent?.id,
+        schoolId: school?._id,
+        userType: req.parent?.userType,
+        fullName,
+        email,
+        phone,
+        location,
+        subject,
+        message,
+      });
+      await equiry.save();
+
+      // Eventually an email will be sent to school here (school.email)
+
+      return res.status(201).json({
+        status: 'success',
+        message: 'Enquiry successfully created',
+        data: {
+          equiry,
+        },
+      });
+    } catch (error) {
+      console.log('Create Enquiry Error:', error.message);
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to send enquiry',
+      });
+    }
+  }
 }
 
 module.exports = new ParentController();
