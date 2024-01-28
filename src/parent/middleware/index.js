@@ -41,16 +41,20 @@ const auth = async (req, res, next) => {
     req.parent = parent;
     next();
   } catch (error) {
-    console.log('Error verify user token: ', error.message)
     if (error instanceof jwt.TokenExpiredError) {
       return res.status(401).json({
         status: 'failed',
         message: 'Session Expired. Please Login Again.',
       });
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({
+        status: 'failed',
+        message: 'Invalid Session. Please Login Again.',
+      });
     }
     return res.status(500).json({
       status: 'failed',
-      message: 'Unable to verify',
+      message: 'Unable to verify user',
     });
   }
 };
