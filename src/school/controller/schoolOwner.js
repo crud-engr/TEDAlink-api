@@ -8,6 +8,9 @@ const Otp = require('../model/SchoolOwnerOtp');
 const Util = require('../../common/utils/util');
 const SchoolOwnerOtp = require('../model/SchoolOwnerOtp');
 const SchoolOwner = require('../model/SchoolOwner');
+const { isValidObjectId } = require('mongoose');
+const School = require('../model/School');
+const Enquiry = require('../../parent/model/Enquiry');
 
 class SchoolOwnerController {
   async signup(req, res) {
@@ -162,7 +165,7 @@ class SchoolOwnerController {
       }
 
       // const otp = Util.generateOTP();
-      const otp = '656565'
+      const otp = '656565';
       // console.log('SCHOOL OWNER ACCOUNT ACTIVATION OTP: ', otp);
 
       // Encrypt otp
@@ -310,7 +313,10 @@ class SchoolOwnerController {
         });
       }
 
-      const validPassword = await bcrypt.compare(password, schoolOwner.password);
+      const validPassword = await bcrypt.compare(
+        password,
+        schoolOwner.password,
+      );
       if (validPassword === false) {
         return res.status(422).json({
           status: 'failed',
@@ -318,7 +324,7 @@ class SchoolOwnerController {
         });
       }
 
-      const isSchoolOwnerActive = schoolOwner.isActive === true
+      const isSchoolOwnerActive = schoolOwner.isActive === true;
       if (!isSchoolOwnerActive) {
         return res.status(403).json({
           status: 'failed',
@@ -525,6 +531,44 @@ class SchoolOwnerController {
           message: 'Unable to set new password',
         });
       }
+    }
+  };
+
+  getEnquiries = async (req, res) => {
+    try {
+      const { schoolId } = req.params;
+      if (!isValidObjectId(schoolId)) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Invalid school',
+        });
+      }
+      const school = await School.findById(schoolId);
+
+      if (!school) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'School not found',
+        });
+      }
+
+      const enquiries = await Enquiry.find({ schoolId }).sort({
+        createdAt: -1,
+      });
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'Enquiries retrieved',
+        data: {
+          enquiries,
+        },
+      });
+    } catch (error) {
+      console.log('Error getting enquiries:', error.message);
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to get enquiries',
+      });
     }
   };
 }
