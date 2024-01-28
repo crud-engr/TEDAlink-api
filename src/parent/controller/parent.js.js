@@ -8,6 +8,7 @@ const Parent = require('../model/Parent');
 const Otp = require('../model/Otp');
 const Util = require('../../common/utils/util');
 const School = require('../../school/model/School');
+const Admission = require('../model/Admission');
 const { isValidObjectId } = require('mongoose');
 const Enquiry = require('../model/Enquiry');
 
@@ -319,7 +320,7 @@ class ParentController {
         });
       }
 
-      const isParentActive = parent.isActive === true
+      const isParentActive = parent.isActive === true;
       if (!isParentActive) {
         return res.status(403).json({
           status: 'failed',
@@ -327,7 +328,7 @@ class ParentController {
         });
       }
 
-      const isUserTypeParent = parent.userType === 'parent'
+      const isUserTypeParent = parent.userType === 'parent';
       if (!isUserTypeParent) {
         return res.status(403).json({
           status: 'failed',
@@ -360,7 +361,7 @@ class ParentController {
     }
   }
 
-  async initiatePasswordReset (req, res) {
+  async initiatePasswordReset(req, res) {
     try {
       const rules = {
         email: 'required|email',
@@ -417,9 +418,9 @@ class ParentController {
         message: 'Unable to send OTP',
       });
     }
-  };
+  }
 
-  async setNewPassword (req, res) {
+  async setNewPassword(req, res) {
     try {
       const rules = {
         password: 'required|string',
@@ -527,6 +528,87 @@ class ParentController {
         });
       }
     }
+  }
+
+  async updatePassword (req, res){
+    try {
+      const rules = {
+        oldPassword: 'required|string',
+        newPassword: 'required|string',
+        confirmPassword: 'required|string',
+      };
+
+      const validation = new Validator(req.body, rules);
+
+      if (validation.fails()) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Validation Errors',
+          errors: validation.errors.all(),
+        });
+      }
+
+      const { id } = req.parent;
+      const { oldPassword, newPassword, confirmPassword } = req.body;
+
+      const parent = await Parent.findById(id);
+
+      if (!parent) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'Parent not found',
+        });
+      }
+
+      const isOldPasswordCorrect = await bcrypt.compare(oldPassword, parent.password);
+
+      if (!isOldPasswordCorrect) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Old password is not correct',
+        });
+      }
+
+      const isOldPasswordEqualsNewPassword = await bcrypt.compare(
+        newPassword,
+        parent.password,
+      );
+      if (isOldPasswordEqualsNewPassword) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Old password is the same as new password',
+        });
+      }
+
+      if (!Util.isPasswordValid(newPassword)) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Password should be strong',
+        });
+      }
+
+      if (newPassword !== confirmPassword) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Passwords do not match',
+        });
+      }
+
+      // Hash password + salt
+      parent.password = await bcrypt.hash(newPassword, 10);
+      await parent.save();
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'Password successfully updated',
+      });
+    } catch (error) {
+      console.log('Error updating password: ', error.message)
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to update password',
+      });
+    }
   };
 
   // Fetch schools
@@ -614,7 +696,7 @@ class ParentController {
 
       const { schoolId } = req.params;
 
-      if(!isValidObjectId(schoolId)) {
+      if (!isValidObjectId(schoolId)) {
         return res.status(400).json({
           status: 'failed',
           message: 'Invalid school',
@@ -629,14 +711,7 @@ class ParentController {
         });
       }
 
-      const {
-        fullName,
-        email,
-        phone,
-        location,
-        subject,
-        message,
-      } = req.body;
+      const { fullName, email, phone, location, subject, message } = req.body;
 
       const equiry = new Enquiry({
         parentId: req.parent?.id,
@@ -665,6 +740,104 @@ class ParentController {
       return res.status(500).json({
         status: 'failed',
         message: 'Unable to send enquiry',
+      });
+    }
+  }
+
+  async applyForAdmission(req, res) {
+    try {
+      const rules = {
+        firstName: 'required|string',
+        lastName: 'required|string',
+        gender: 'required|string',
+        dob: 'required|string',
+        placeOfBirth: 'required|string',
+        applicantClass: 'required|string',
+        residentAddress: 'required|string',
+        presentSchool: 'required|string',
+        postalCode: 'required|string',
+        country: 'required|string',
+        state: 'required|string',
+        lga: 'required|string',
+        relationshipToPupil: 'required|string',
+      };
+
+      const validation = new Validator(req.body, rules);
+
+      if (validation.fails()) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Validation Errors',
+          errors: validation.errors.all(),
+        });
+      }
+
+      const { schoolId } = req.params;
+
+      if (!isValidObjectId(schoolId)) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Invalid school',
+        });
+      }
+
+      const school = await School.findById(schoolId);
+      if (!school) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'School not found',
+        });
+      }
+
+      const {
+        firstName,
+        lastName,
+        gender,
+        dob,
+        placeOfBirth,
+        applicantClass,
+        residentAddress,
+        presentSchool,
+        postalCode,
+        country,
+        state,
+        lga,
+        relationshipToPupil
+      } = req.body;
+
+      const admission = new Admission({
+        parentId: req.parent?.id,
+        schoolId: school?._id,
+        firstName,
+        lastName,
+        gender,
+        dob,
+        placeOfBirth,
+        applicantClass,
+        residentAddress,
+        presentSchool,
+        postalCode,
+        country,
+        state,
+        lga,
+        relationshipToPupil
+      });
+      await admission.save();
+
+      // Eventually an email will be sent to school here (school.email)
+
+      return res.status(201).json({
+        status: 'success',
+        message: 'Admission successfully applied',
+        data: {
+          admission,
+        },
+      });
+    } catch (error) {
+      console.log('Apply Admission Error:', error.message);
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to apply for admission',
       });
     }
   }
