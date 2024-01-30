@@ -19,5 +19,6 @@ router.patch('/schools/:schoolId', auth, SchoolController.updateSchool);
 router.delete('/schools/:schoolId', auth, SchoolController.deleteSchool);
 
 router.get('/schools/:schoolId/enquiries', auth, SchoolOwnerController.getEnquiries);
+router.get('/schools/:schoolId/admissions', auth, SchoolOwnerController.getSchoolAdmissions);
 
 module.exports = router;
