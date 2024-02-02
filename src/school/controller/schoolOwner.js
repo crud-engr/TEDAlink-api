@@ -537,25 +537,25 @@ class SchoolOwnerController {
 
   getEnquiries = async (req, res) => {
     try {
-      const { schoolId } = req.params;
-      if (!isValidObjectId(schoolId)) {
-        return res.status(400).json({
-          status: 'failed',
-          message: 'Invalid school',
-        });
-      }
-      const school = await School.findById(schoolId);
+      const { id } = req.schoolOwner;
+      const schoolOwner = await SchoolOwner.findById(id);
 
-      if (!school) {
+      if (!schoolOwner) {
         return res.status(404).json({
           status: 'failed',
-          message: 'School not found',
+          message: 'School owner not found',
         });
       }
 
-      const enquiries = await Enquiry.find({ schoolId }).sort({
-        createdAt: -1,
-      });
+      const enquiries = await Enquiry.find({ schoolOwnerId: id })
+        .sort({
+          createdAt: -1,
+        })
+        .populate({
+          path: 'parentId',
+          select:
+            '-password -createdAt -updatedAt -isActive -isDisabled -userType',
+        });
 
       return res.status(200).json({
         status: 'success',
@@ -573,34 +573,26 @@ class SchoolOwnerController {
     }
   };
 
-  async getSchoolAdmissions(req, res) {
+  async getAdmissions(req, res) {
     try {
-      const { schoolId } = req.params;
-      if (!isValidObjectId(schoolId)) {
-        return res.status(400).json({
-          status: 'failed',
-          message: 'Invalid school',
-        });
-      }
-
       const { id } = req.schoolOwner;
+      const schoolOwner = await SchoolOwner.findById(id);
 
-      const school = await School.findOne({ _id: schoolId, schoolOwner: id });
-
-      if (!school) {
+      if (!schoolOwner) {
         return res.status(404).json({
           status: 'failed',
-          message: 'School Not Found',
+          message: 'School Owner Not Found',
         });
       }
 
-      const admissions = await Admission.find({ schoolId: school._id })
+      const admissions = await Admission.find({ schoolOwnerId: id })
         .sort({
           createdAt: -1,
         })
         .populate({
           path: 'parentId',
-          select: '-password',
+          select:
+            '-password -createdAt -updatedAt -isActive -isDisabled -userType',
         });
 
       if (admissions.length === 0) {
