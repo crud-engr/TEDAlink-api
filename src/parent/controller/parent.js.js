@@ -614,6 +614,39 @@ class ParentController {
     }
   }
 
+  async updateProfile(req, res) {
+    try {
+      const { _id } = req.parent;
+
+      const parent = await Parent.findOneAndUpdate(
+        { _id },
+        req.body,
+        { new: true, runValidators: true },
+      );
+
+      if (!parent) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'Parent not found',
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'Parent profile Successfully Updated',
+        data: {
+          parent,
+        },
+      });
+    } catch (error) {
+      console.log('Update Parent Error:', error.message);
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to update parent',
+      });
+    }
+  }
+
   // Fetch schools
   async getSchools(req, res) {
     try {
