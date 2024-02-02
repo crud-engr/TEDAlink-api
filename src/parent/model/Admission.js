@@ -11,6 +11,10 @@ const AdmissionSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'School',
     },
+    schoolOwnerId: {
+      type: Schema.Types.ObjectId,
+      ref: 'SchoolOwner',
+    },
     firstName: {
       type: String,
       required: true,

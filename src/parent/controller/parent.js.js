@@ -530,7 +530,7 @@ class ParentController {
     }
   }
 
-  async updatePassword (req, res){
+  async updatePassword(req, res) {
     try {
       const rules = {
         oldPassword: 'required|string',
@@ -560,7 +560,10 @@ class ParentController {
         });
       }
 
-      const isOldPasswordCorrect = await bcrypt.compare(oldPassword, parent.password);
+      const isOldPasswordCorrect = await bcrypt.compare(
+        oldPassword,
+        parent.password,
+      );
 
       if (!isOldPasswordCorrect) {
         return res.status(400).json({
@@ -603,13 +606,13 @@ class ParentController {
         message: 'Password successfully updated',
       });
     } catch (error) {
-      console.log('Error updating password: ', error.message)
+      console.log('Error updating password: ', error.message);
       return res.status(500).json({
         status: 'failed',
         message: 'Unable to update password',
       });
     }
-  };
+  }
 
   // Fetch schools
   async getSchools(req, res) {
@@ -716,6 +719,7 @@ class ParentController {
       const equiry = new Enquiry({
         parentId: req.parent?.id,
         schoolId: school?._id,
+        schoolOwnerId: school?.schoolOwner,
         userType: req.parent?.userType,
         fullName,
         email,
@@ -802,12 +806,13 @@ class ParentController {
         country,
         state,
         lga,
-        relationshipToPupil
+        relationshipToPupil,
       } = req.body;
 
       const admission = new Admission({
         parentId: req.parent?.id,
         schoolId: school?._id,
+        schoolOwnerId: school?.schoolOwner,
         firstName,
         lastName,
         gender,
@@ -820,7 +825,7 @@ class ParentController {
         country,
         state,
         lga,
-        relationshipToPupil
+        relationshipToPupil,
       });
       await admission.save();
 
