@@ -618,7 +618,7 @@ class ParentController {
     try {
       const { _id } = req.parent;
 
-      if ("password" || "confirmPassword" in req.body) {
+      if (req.body.password || req.body.confirmPassword) {
         return res.status(400).json({
           status: 'failed',
           message: 'Please Use Update Password Route.',
