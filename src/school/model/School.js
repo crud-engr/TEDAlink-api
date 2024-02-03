@@ -80,6 +80,42 @@ const SchoolSchema = new Schema(
     bankName: {
       type: String,
     },
+    admissionProcedures: {
+      type: Array,
+      default: []
+    },
+    subjectOffered: {
+      type: Array,
+      default: []
+    },
+    extracurriculumActivities: {
+      type: Array,
+      default: []
+    },
+    videoUrl: {
+      type: String,
+    },
+    history: {
+      type: String,
+    },
+    securityMeasure: {
+      type: String,
+    },
+    schoolFeeDiscount: {
+      type: Number,
+    },
+    minimumSchoolFee: {
+      type: Number,
+    },
+    maximumSchoolFee: {
+      type: Number,
+    },
+    longitude: {
+      type: Number,
+    },
+    latitude: {
+      type: Number,
+    },
     isActive: {
       type: Boolean,
       default: true,
