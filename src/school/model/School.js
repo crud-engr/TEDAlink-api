@@ -49,27 +49,27 @@ const SchoolSchema = new Schema(
     },
     curriculums: {
       type: Array,
-      default: []
+      default: [],
     },
     programsOffered: {
       type: Array,
-      default: []
+      default: [],
     },
     scholarships: {
       type: Array,
-      default: []
+      default: [],
     },
     awards: {
       type: Array,
-      default: []
+      default: [],
     },
     facilityImages: {
       type: Array,
-      default: []
+      default: [],
     },
     admissionRequirements: {
       type: Array,
-      default: []
+      default: [],
     },
     accountNumber: {
       type: String,
@@ -82,15 +82,15 @@ const SchoolSchema = new Schema(
     },
     admissionProcedures: {
       type: Array,
-      default: []
+      default: [],
     },
     subjectOffered: {
       type: Array,
-      default: []
+      default: [],
     },
     extracurriculumActivities: {
       type: Array,
-      default: []
+      default: [],
     },
     videoUrl: {
       type: String,
@@ -121,6 +121,21 @@ const SchoolSchema = new Schema(
     },
     applicationFee: {
       type: Number,
+    },
+    views: {
+      type: Number,
+      default: 0,
+    },
+    likes: {
+      type: Number,
+      default: 0,
+    },
+    ratings: {
+      type: Number,
+      default: 0,
+    },
+    academicYear: {
+      type: String,
     },
     isActive: {
       type: Boolean,

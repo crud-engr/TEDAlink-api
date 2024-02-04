@@ -11,6 +11,7 @@ const School = require('../../school/model/School');
 const Admission = require('../model/Admission');
 const { isValidObjectId } = require('mongoose');
 const Enquiry = require('../model/Enquiry');
+const SchoolReview = require('../../school/model/SchoolReviews');
 
 class ParentController {
   async signup(req, res) {
@@ -901,6 +902,82 @@ class ParentController {
       return res.status(500).json({
         status: 'failed',
         message: 'Unable to apply for admission',
+      });
+    }
+  }
+
+  async reviewSchool(req, res) {
+    try {
+      const rules = {
+        fullName: 'required|string',
+        reviewComment: 'required|string',
+      };
+
+      const validation = new Validator(req.body, rules);
+
+      if (validation.fails()) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Validation Errors',
+          errors: validation.errors.all(),
+        });
+      }
+
+      const { fullName, reviewComment } = req.body;
+      const { schoolId } = req.params;
+
+      if (!isValidObjectId(schoolId)) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Invalid school',
+        });
+      }
+
+      const school = await School.findById(schoolId);
+      if (!school) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'School not found',
+        });
+      }
+
+      const parent = await Parent.findById(req.parent.id);
+      if (!parent) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'Parent not found',
+        });
+      }
+
+      const schoolReview = await SchoolReview.findOne({ schoolId, parentId: req.parent.id });
+      if (schoolReview) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Review already created for this school',
+        });
+      }
+
+      const review = new SchoolReview({
+        parentId: req.parent?.id,
+        schoolId: school?._id,
+        fullName,
+        reviewComment,
+      });
+
+      await review.save();
+
+      return res.status(201).json({
+        status: 'success',
+        message: 'Review successfully sent',
+        data: {
+          review,
+        },
+      });
+    } catch (error) {
+      console.log('Review Error:', error.message);
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to review school',
       });
     }
   }

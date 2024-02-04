@@ -103,6 +103,10 @@ class SchoolController {
         });
       }
 
+      const currentYear = new Date().getFullYear();
+      const nextYear = new Date().getFullYear() + 1;
+      const academicYear = `${currentYear}/${nextYear}`
+
       // Get school longitude and latitude
       const geoData = await this.getLatLng(address);
 
@@ -143,7 +147,8 @@ class SchoolController {
           maximumSchoolFee,
           longitude: geoData.longitude,
           latitude: geoData.latitude,
-          applicationFee
+          applicationFee,
+          academicYear
         });
 
         await school.save();
