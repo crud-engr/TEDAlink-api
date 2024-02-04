@@ -9,8 +9,11 @@ const Otp = require('../model/Otp');
 const Util = require('../../common/utils/util');
 const School = require('../../school/model/School');
 const Admission = require('../model/Admission');
-const { isValidObjectId } = require('mongoose');
+const { isValidObjectId, default: mongoose } = require('mongoose');
 const Enquiry = require('../model/Enquiry');
+const SchoolReview = require('../../school/model/SchoolReviews');
+const SchoolLike = require('../../school/model/SchoolLike');
+const SchoolRating = require('../../school/model/SchoolRating');
 
 class ParentController {
   async signup(req, res) {
@@ -164,8 +167,9 @@ class ParentController {
         });
       }
 
-      // const otp = Util.generateOTP();
-      const otp = '656565';
+      const otp = Util.generateOTP();
+      // const otp = '656565';
+      console.log('USER REGISTRATION OTP: ', otp)
 
       // Encrypt otp
       const encryptedOtp = crypto
@@ -337,7 +341,7 @@ class ParentController {
       }
 
       const parentData = {
-        id: parent._id,
+        _id: parent._id,
         email: parent.email,
         userType: parent.userType,
         phone: parent.phone,
@@ -530,7 +534,7 @@ class ParentController {
     }
   }
 
-  async updatePassword (req, res){
+  async updatePassword(req, res) {
     try {
       const rules = {
         oldPassword: 'required|string',
@@ -548,10 +552,10 @@ class ParentController {
         });
       }
 
-      const { id } = req.parent;
+      const { _id } = req.parent;
       const { oldPassword, newPassword, confirmPassword } = req.body;
 
-      const parent = await Parent.findById(id);
+      const parent = await Parent.findById(_id);
 
       if (!parent) {
         return res.status(404).json({
@@ -560,7 +564,10 @@ class ParentController {
         });
       }
 
-      const isOldPasswordCorrect = await bcrypt.compare(oldPassword, parent.password);
+      const isOldPasswordCorrect = await bcrypt.compare(
+        oldPassword,
+        parent.password,
+      );
 
       if (!isOldPasswordCorrect) {
         return res.status(400).json({
@@ -603,13 +610,52 @@ class ParentController {
         message: 'Password successfully updated',
       });
     } catch (error) {
-      console.log('Error updating password: ', error.message)
+      console.log('Error updating password: ', error.message);
       return res.status(500).json({
         status: 'failed',
         message: 'Unable to update password',
       });
     }
-  };
+  }
+
+  async updateProfile(req, res) {
+    try {
+      const { _id } = req.parent;
+
+      if (req.body.password || req.body.confirmPassword) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Please Use Update Password Route.',
+        });
+      }
+
+      const parent = await Parent.findOneAndUpdate({ _id }, req.body, {
+        new: true,
+        runValidators: true,
+      });
+
+      if (!parent) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'Parent not found',
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'Parent profile Successfully Updated',
+        data: {
+          parent,
+        },
+      });
+    } catch (error) {
+      console.log('Update Parent Error:', error.message);
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to update parent',
+      });
+    }
+  }
 
   // Fetch schools
   async getSchools(req, res) {
@@ -714,8 +760,9 @@ class ParentController {
       const { fullName, email, phone, location, subject, message } = req.body;
 
       const equiry = new Enquiry({
-        parentId: req.parent?.id,
+        parentId: req.parent?._id,
         schoolId: school?._id,
+        schoolOwnerId: school?.schoolOwner,
         userType: req.parent?.userType,
         fullName,
         email,
@@ -760,6 +807,9 @@ class ParentController {
         state: 'required|string',
         lga: 'required|string',
         relationshipToPupil: 'required|string',
+        religion: 'required|string',
+        haveDisability: 'required|boolean',
+        disabilityDescription: 'string',
       };
 
       const validation = new Validator(req.body, rules);
@@ -802,12 +852,16 @@ class ParentController {
         country,
         state,
         lga,
-        relationshipToPupil
+        relationshipToPupil,
+        religion,
+        haveDisability,
+        disabilityDescription,
       } = req.body;
 
       const admission = new Admission({
-        parentId: req.parent?.id,
+        parentId: req.parent?._id,
         schoolId: school?._id,
+        schoolOwnerId: school?.schoolOwner,
         firstName,
         lastName,
         gender,
@@ -820,8 +874,21 @@ class ParentController {
         country,
         state,
         lga,
-        relationshipToPupil
+        relationshipToPupil,
+        religion,
+        haveDisability,
+        disabilityDescription,
       });
+      if (
+        admission.haveDisability === true &&
+        (!admission.disabilityDescription ||
+          admission.disabilityDescription === '')
+      ) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Disability description is required',
+        });
+      }
       await admission.save();
 
       // Eventually an email will be sent to school here (school.email)
@@ -839,6 +906,458 @@ class ParentController {
         status: 'failed',
         message: 'Unable to apply for admission',
       });
+    }
+  }
+
+  async reviewSchool(req, res) {
+    try {
+      const rules = {
+        fullName: 'required|string',
+        reviewComment: 'required|string',
+      };
+
+      const validation = new Validator(req.body, rules);
+
+      if (validation.fails()) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Validation Errors',
+          errors: validation.errors.all(),
+        });
+      }
+
+      const { fullName, reviewComment } = req.body;
+      const { schoolId } = req.params;
+
+      if (!isValidObjectId(schoolId)) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Invalid school',
+        });
+      }
+
+      const school = await School.findById(schoolId);
+      if (!school) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'School not found',
+        });
+      }
+
+      const parent = await Parent.findById(req.parent._id);
+      if (!parent) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'Parent not found',
+        });
+      }
+
+      const schoolReview = await SchoolReview.findOne({
+        schoolId,
+        parentId: req.parent._id,
+      });
+      if (schoolReview) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Review already created for this school',
+        });
+      }
+
+      const review = new SchoolReview({
+        parentId: req.parent?._id,
+        schoolId: school?._id,
+        fullName,
+        reviewComment,
+      });
+
+      await review.save();
+
+      return res.status(201).json({
+        status: 'success',
+        message: 'Review successfully sent',
+        data: {
+          review,
+        },
+      });
+    } catch (error) {
+      console.log('Review Error:', error.message);
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to review school',
+      });
+    }
+  }
+
+  // Use mongodb transaction
+  async toggleLikeSchool(req, res) {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      const { schoolId } = req.params;
+
+      if (!mongoose.isValidObjectId(schoolId)) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Invalid school',
+        });
+      }
+
+      const school = await School.findById(schoolId).session(session);
+      if (!school) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'School not found',
+        });
+      }
+
+      const parent = await Parent.findById(req.parent._id).session(session);
+      if (!parent) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'Parent not found',
+        });
+      }
+
+      const schoolLike = await SchoolLike.findOne({
+        schoolId,
+        parentId: req.parent._id,
+      }).session(session);
+      if (schoolLike) {
+        // If already liked, unlike the school
+        await SchoolLike.findByIdAndDelete(schoolLike._id).session(session);
+
+        // Decrement school likes by 1
+        school.likes -= 1;
+      } else {
+        // If not liked, like the school
+        await SchoolLike.create(
+          [
+            {
+              parentId: req.parent?._id,
+              schoolId: school?._id,
+            },
+          ],
+          { session },
+        );
+
+        // Increment school likes by 1
+        school.likes += 1;
+      }
+
+      await school.save();
+      await session.commitTransaction();
+
+      return res.status(200).json({
+        status: 'success',
+        message: `School ${schoolLike ? 'unliked' : 'liked'} successfully`,
+        data: {
+          likes: school.likes,
+        },
+      });
+    } catch (error) {
+      console.log('Toggle Like Error:', error.message);
+      await session.abortTransaction();
+
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to toggle like for the school',
+      });
+    } finally {
+      session.endSession();
+    }
+  }
+
+  // async rateSchool(req, res) {
+  //   try {
+  //     const rules = {
+  //       fullName: 'required|string',
+  //       reviewComment: 'required|string',
+  //     };
+
+  //     const validation = new Validator(req.body, rules);
+
+  //     if (validation.fails()) {
+  //       return res.status(400).json({
+  //         status: 'failed',
+  //         message: 'Validation Errors',
+  //         errors: validation.errors.all(),
+  //       });
+  //     }
+
+  //     const { fullName, reviewComment } = req.body;
+  //     const { schoolId } = req.params;
+
+  //     if (!isValidObjectId(schoolId)) {
+  //       return res.status(400).json({
+  //         status: 'failed',
+  //         message: 'Invalid school',
+  //       });
+  //     }
+
+  //     const school = await School.findById(schoolId);
+  //     if (!school) {
+  //       return res.status(404).json({
+  //         status: 'failed',
+  //         message: 'School not found',
+  //       });
+  //     }
+
+  //     const parent = await Parent.findById(req.parent.id);
+  //     if (!parent) {
+  //       return res.status(404).json({
+  //         status: 'failed',
+  //         message: 'Parent not found',
+  //       });
+  //     }
+
+  //     const schoolReview = await SchoolReview.findOne({
+  //       schoolId,
+  //       parentId: req.parent.id,
+  //     });
+  //     if (schoolReview) {
+  //       return res.status(400).json({
+  //         status: 'failed',
+  //         message: 'Review already created for this school',
+  //       });
+  //     }
+
+  //     const review = new SchoolReview({
+  //       parentId: req.parent?.id,
+  //       schoolId: school?._id,
+  //       fullName,
+  //       reviewComment,
+  //     });
+
+  //     await review.save();
+
+  //     return res.status(201).json({
+  //       status: 'success',
+  //       message: 'Review successfully sent',
+  //       data: {
+  //         review,
+  //       },
+  //     });
+  //   } catch (error) {
+  //     console.log('Review Error:', error.message);
+  //     return res.status(500).json({
+  //       status: 'failed',
+  //       message: 'Unable to review school',
+  //     });
+  //   }
+  // }
+
+  // async rateSchool(req, res) {
+  //   const session = await mongoose.startSession();
+  //   session.startTransaction();
+
+  //   try {
+  //     const rules = {
+  //       ratingValue: 'required|integer|max:5|min:1',
+  //     };
+
+  //     const validation = new Validator(req.body, rules);
+
+  //     if (validation.fails()) {
+  //       return res.status(400).json({
+  //         status: 'failed',
+  //         message: 'Validation Errors',
+  //         errors: validation.errors.all(),
+  //       });
+  //     }
+
+  //     const { ratingValue } = req.body;
+  //     const { schoolId } = req.params;
+
+  //     if (!mongoose.isValidObjectId(schoolId)) {
+  //       return res.status(400).json({
+  //         status: 'failed',
+  //         message: 'Invalid school',
+  //       });
+  //     }
+
+  //     const school = await School.findById(schoolId).session(session);
+  //     if (!school) {
+  //       return res.status(404).json({
+  //         status: 'failed',
+  //         message: 'School not found',
+  //       });
+  //     }
+
+  //     const parent = await Parent.findById(req.parent.id).session(session);
+  //     if (!parent) {
+  //       return res.status(404).json({
+  //         status: 'failed',
+  //         message: 'Parent not found',
+  //       });
+  //     }
+
+  //     const schoolRating = await SchoolRating.findOne({
+  //       schoolId,
+  //       parentId: req.parent.id,
+  //     }).session(session);
+
+  //     if (schoolRating) {
+  //       return res.status(400).json({
+  //         status: 'failed',
+  //         message: 'School has already been rated',
+  //       });
+  //     }
+
+  //     await SchoolRating.create(
+  //       [
+  //         {
+  //           parentId: req.parent?.id,
+  //           schoolId: school?._id,
+  //           ratingValue,
+  //         },
+  //       ],
+  //       { session },
+  //     );
+
+  //     // Update school's average rating
+  //     const previousTotalRatings = school.avgRatings * school.numOfRatings;
+  //     school.numOfRatings += 1;
+  //     school.avgRatings =
+  //       (previousTotalRatings + ratingValue) / school.numOfRatings;
+
+  //     await school.save();
+  //     await session.commitTransaction();
+
+  //     return res.status(200).json({
+  //       status: 'success',
+  //       message: `School rated successfully`,
+  //       data: {
+  //         avgRatings: school.avgRatings,
+  //       },
+  //     });
+  //   } catch (error) {
+  //     console.log('Rate Error:', error.message);
+  //     await session.abortTransaction();
+
+  //     return res.status(500).json({
+  //       status: 'failed',
+  //       message: 'Unable to rate school',
+  //     });
+  //   } finally {
+  //     session.endSession();
+  //   }
+  // }
+
+  async rateSchool(req, res) {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      const rules = {
+        ratingValue: 'required|integer|max:5|min:1',
+      };
+
+      const validation = new Validator(req.body, rules);
+
+      if (validation.fails()) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Validation Errors',
+          errors: validation.errors.all(),
+        });
+      }
+
+      let { ratingValue } = req.body;
+      const { schoolId } = req.params;
+
+      ratingValue = Number(ratingValue);
+
+      if (!mongoose.isValidObjectId(schoolId)) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Invalid school',
+        });
+      }
+
+      // if (
+      //   !Number.isInteger(ratingValue) ||
+      //   ratingValue < 1 ||
+      //   ratingValue > 5
+      // ) {
+      //   return res.status(400).json({
+      //     status: 'failed',
+      //     message: 'Invalid rating value',
+      //   });
+      // }
+
+      const school = await School.findById(schoolId).session(session);
+      if (!school) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'School not found',
+        });
+      }
+
+      const parent = await Parent.findById(req.parent._id).session(session);
+      if (!parent) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'Parent not found',
+        });
+      }
+
+      const schoolRating = await SchoolRating.findOne({
+        schoolId,
+        parentId: req.parent._id,
+      }).session(session);
+
+      if (schoolRating) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'School has already been rated',
+        });
+      }
+
+      await SchoolRating.create(
+        [
+          {
+            parentId: req.parent?._id,
+            schoolId: school?._id,
+            ratingValue,
+          },
+        ],
+        { session },
+      );
+
+      // Update school's average rating
+      const previousTotalRatings = school.avgRatings * school.numOfRatings;
+      school.numOfRatings += 1;
+
+      if (school.numOfRatings === 1) {
+        // If it's the first rating, set avgRatings to the new ratingValue
+        school.avgRatings = ratingValue;
+      } else {
+        // Otherwise, calculate the new average rating
+        school.avgRatings =
+          (previousTotalRatings + ratingValue) / school.numOfRatings;
+      }
+
+      await school.save();
+      await session.commitTransaction();
+
+      return res.status(200).json({
+        status: 'success',
+        message: `School rated successfully`,
+        data: {
+          avgRatings: school.avgRatings,
+        },
+      });
+    } catch (error) {
+      console.log('Rate Error:', error.message);
+      await session.abortTransaction();
+
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to rate school',
+      });
+    } finally {
+      session.endSession();
     }
   }
 }

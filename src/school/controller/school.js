@@ -1,14 +1,16 @@
 const Validator = require('validatorjs');
 const moment = require('moment');
+const { isValidObjectId } = require('mongoose');
+const axios = require('axios');
 
 const Util = require('../../common/utils/util');
 const SchoolOwner = require('../model/SchoolOwner');
 const School = require('../model/School');
-const { isValidObjectId } = require('mongoose');
 const ArchiveSchool = require('../model/ArchiveSchool');
+require('dotenv').config();
 
 class SchoolController {
-  async createSchool(req, res) {
+  createSchool = async (req, res) => {
     try {
       const rules = {
         email: 'required|email',
@@ -33,6 +35,17 @@ class SchoolController {
         accountNumber: 'required|string',
         accountName: 'required|string',
         bankName: 'required|string',
+        admissionProcedures: 'required|array',
+        subjectOffered: 'required|array',
+        extracurriculumActivities: 'required|array',
+        videoUrl: 'url',
+        history: 'required|string',
+        securityMeasure: 'required|string',
+        about: 'required|string',
+        schoolFeeDiscount: 'integer',
+        minimumSchoolFee: 'required|integer',
+        maximumSchoolFee: 'required|integer',
+        applicationFee: 'required|integer',
       };
 
       const validation = new Validator(req.body, rules);
@@ -68,6 +81,17 @@ class SchoolController {
         accountNumber,
         accountName,
         bankName,
+        admissionProcedures,
+        subjectOffered,
+        extracurriculumActivities,
+        videoUrl,
+        about,
+        history,
+        securityMeasure,
+        schoolFeeDiscount,
+        minimumSchoolFee,
+        maximumSchoolFee,
+        applicationFee
       } = req.body;
       const { _id } = req.schoolOwner;
 
@@ -79,41 +103,64 @@ class SchoolController {
         });
       }
 
-      const school = new School({
-        schoolOwner: _id,
-        email,
-        name,
-        category,
-        type,
-        phone,
-        address,
-        country,
-        state,
-        city,
-        lga,
-        website,
-        logo,
-        banner,
-        admissionRequirements,
-        curriculums,
-        programsOffered,
-        scholarships,
-        awards,
-        facilityImages,
-        accountNumber,
-        accountName,
-        bankName,
-      });
+      const currentYear = new Date().getFullYear();
+      const nextYear = new Date().getFullYear() + 1;
+      const academicYear = `${currentYear}/${nextYear}`
 
-      await school.save();
+      // Get school longitude and latitude
+      const geoData = await this.getLatLng(address);
 
-      return res.status(201).json({
-        status: 'success',
-        message: 'School successfully created',
-        data: {
-          school,
-        },
-      });
+      if (geoData.latitude && geoData.longitude) {
+        const school = new School({
+          schoolOwner: _id,
+          email,
+          name,
+          category,
+          type,
+          phone,
+          address,
+          country,
+          state,
+          city,
+          lga,
+          website,
+          logo,
+          banner,
+          about,
+          admissionRequirements,
+          curriculums,
+          programsOffered,
+          scholarships,
+          awards,
+          facilityImages,
+          accountNumber,
+          accountName,
+          bankName,
+          admissionProcedures,
+          subjectOffered,
+          extracurriculumActivities,
+          videoUrl,
+          history,
+          securityMeasure,
+          schoolFeeDiscount,
+          minimumSchoolFee,
+          maximumSchoolFee,
+          longitude: geoData.longitude,
+          latitude: geoData.latitude,
+          applicationFee,
+          academicYear
+        });
+
+        await school.save();
+
+        return res.status(201).json({
+          status: 'success',
+          message: 'School successfully created',
+          data: {
+            school,
+          },
+        });
+      }
     } catch (error) {
       console.log('Create School Error:', error.message);
       return res.status(500).json({
@@ -121,13 +168,37 @@ class SchoolController {
         message: 'Unable to create school',
       });
     }
+  };
+
+  async getLatLng(address) {
+    const { OPENCAGE_API_KEY, OPENCAGE_BASE_URL } = process.env;
+    const apiKey = OPENCAGE_API_KEY;
+    const geocodingUrl = `${OPENCAGE_BASE_URL}/geocode/v1/json?q=${encodeURIComponent(address)}&key=${apiKey}`;
+
+    try {
+      const response = await axios.get(geocodingUrl);
+      const results = response.data.results;
+      if (results.length > 0) {
+        const location = results[0].geometry;
+        const latitude = location.lat;
+        const longitude = location.lng;
+        return { latitude, longitude };
+      } else {
+        return 'No results found for the address';
+      }
+    } catch (error) {
+      console.log('Error fetching geocoding data: ', error);
+      return 'Error fetching geocoding data';
+    }
   }
 
   // Fetch schools
-  async getSchools(req, res) {
+  getSchools = async (req, res) => {
     try {
       const { _id } = req.schoolOwner;
-      const schools = await School.find({ schoolOwner: _id }).sort({ createdAt: -1 });
+      const schools = await School.find({ schoolOwner: _id }).sort({
+        createdAt: -1,
+      });
 
       if (schools.length === 0) {
         return res.status(404).json({
@@ -150,10 +221,10 @@ class SchoolController {
         message: 'Unable to fetch schools',
       });
     }
-  }
+  };
 
   // Fetch school
-  async getSchool(req, res) {
+  getSchool = async (req, res) => {
     try {
       const { _id } = req.schoolOwner;
       let { schoolId } = req.params;
@@ -185,10 +256,10 @@ class SchoolController {
         message: 'Unable to fetch school',
       });
     }
-  }
+  };
 
   // Update school
-  async updateSchool(req, res) {
+  updateSchool = async (req, res) => {
     try {
       const { _id } = req.schoolOwner;
       let { schoolId } = req.params;
@@ -225,10 +296,10 @@ class SchoolController {
         message: 'Unable to fetch school',
       });
     }
-  }
+  };
 
   // Update school
-  async deleteSchool(req, res) {
+  deleteSchool = async (req, res) => {
     try {
       const { _id } = req.schoolOwner;
       let { schoolId } = req.params;
@@ -239,7 +310,7 @@ class SchoolController {
         });
       }
 
-      const school = await School.findOne({_id: schoolId, schoolOwner: _id})
+      const school = await School.findOne({ _id: schoolId, schoolOwner: _id });
       if (!school) {
         return res.status(400).json({
           status: 'failed',
@@ -266,7 +337,7 @@ class SchoolController {
         message: 'Unable to fetch school',
       });
     }
-  }
+  };
 }
 
 module.exports = new SchoolController();

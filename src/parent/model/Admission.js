@@ -11,6 +11,10 @@ const AdmissionSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'School',
     },
+    schoolOwnerId: {
+      type: Schema.Types.ObjectId,
+      ref: 'SchoolOwner',
+    },
     firstName: {
       type: String,
       required: true,
@@ -66,6 +70,17 @@ const AdmissionSchema = new Schema(
     relationshipToPupil: {
       type: String,
       required: true,
+    },
+    religion: {
+      type: String,
+      required: true,
+    },
+    haveDisability: {
+      type: Boolean,
+      required: true,
+    },
+    disabilityDescription: {
+      type: String,
     },
   },
   { timestamps: true },

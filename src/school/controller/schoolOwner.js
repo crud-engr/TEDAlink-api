@@ -11,6 +11,7 @@ const SchoolOwner = require('../model/SchoolOwner');
 const { isValidObjectId } = require('mongoose');
 const School = require('../model/School');
 const Enquiry = require('../../parent/model/Enquiry');
+const Admission = require('../../parent/model/Admission');
 
 class SchoolOwnerController {
   async signup(req, res) {
@@ -536,25 +537,25 @@ class SchoolOwnerController {
 
   getEnquiries = async (req, res) => {
     try {
-      const { schoolId } = req.params;
-      if (!isValidObjectId(schoolId)) {
-        return res.status(400).json({
-          status: 'failed',
-          message: 'Invalid school',
-        });
-      }
-      const school = await School.findById(schoolId);
+      const { id } = req.schoolOwner;
+      const schoolOwner = await SchoolOwner.findById(id);
 
-      if (!school) {
+      if (!schoolOwner) {
         return res.status(404).json({
           status: 'failed',
-          message: 'School not found',
+          message: 'School owner not found',
         });
       }
 
-      const enquiries = await Enquiry.find({ schoolId }).sort({
-        createdAt: -1,
-      });
+      const enquiries = await Enquiry.find({ schoolOwnerId: id })
+        .sort({
+          createdAt: -1,
+        })
+        .populate({
+          path: 'parentId',
+          select:
+            '-password -createdAt -updatedAt -isActive -isDisabled -userType',
+        });
 
       return res.status(200).json({
         status: 'success',
@@ -571,6 +572,51 @@ class SchoolOwnerController {
       });
     }
   };
+
+  async getAdmissions(req, res) {
+    try {
+      const { id } = req.schoolOwner;
+      const schoolOwner = await SchoolOwner.findById(id);
+
+      if (!schoolOwner) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'School Owner Not Found',
+        });
+      }
+
+      const admissions = await Admission.find({ schoolOwnerId: id })
+        .sort({
+          createdAt: -1,
+        })
+        .populate({
+          path: 'parentId',
+          select:
+            '-password -createdAt -updatedAt -isActive -isDisabled -userType',
+        });
+
+      if (admissions.length === 0) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'No admissions found',
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'Admissions retrieved',
+        data: {
+          admissions,
+        },
+      });
+    } catch (error) {
+      console.log('Error getting admissions:', error.message);
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to get admissions',
+      });
+    }
+  }
 }
 
 module.exports = new SchoolOwnerController();

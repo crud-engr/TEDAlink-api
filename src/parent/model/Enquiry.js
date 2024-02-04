@@ -11,6 +11,10 @@ const EnquirySchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'School',
     },
+    schoolOwnerId: {
+      type: Schema.Types.ObjectId,
+      ref: 'SchoolOwner',
+    },
     email: {
       type: String,
     },

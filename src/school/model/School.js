@@ -49,27 +49,27 @@ const SchoolSchema = new Schema(
     },
     curriculums: {
       type: Array,
-      default: []
+      default: [],
     },
     programsOffered: {
       type: Array,
-      default: []
+      default: [],
     },
     scholarships: {
       type: Array,
-      default: []
+      default: [],
     },
     awards: {
       type: Array,
-      default: []
+      default: [],
     },
     facilityImages: {
       type: Array,
-      default: []
+      default: [],
     },
     admissionRequirements: {
       type: Array,
-      default: []
+      default: [],
     },
     accountNumber: {
       type: String,
@@ -78,6 +78,67 @@ const SchoolSchema = new Schema(
       type: String,
     },
     bankName: {
+      type: String,
+    },
+    admissionProcedures: {
+      type: Array,
+      default: [],
+    },
+    subjectOffered: {
+      type: Array,
+      default: [],
+    },
+    extracurriculumActivities: {
+      type: Array,
+      default: [],
+    },
+    videoUrl: {
+      type: String,
+    },
+    history: {
+      type: String,
+    },
+    securityMeasure: {
+      type: String,
+    },
+    about: {
+      type: String,
+    },
+    schoolFeeDiscount: {
+      type: Number,
+    },
+    minimumSchoolFee: {
+      type: Number,
+    },
+    maximumSchoolFee: {
+      type: Number,
+    },
+    longitude: {
+      type: Number,
+    },
+    latitude: {
+      type: Number,
+    },
+    applicationFee: {
+      type: Number,
+    },
+    views: {
+      type: Number,
+      default: 0,
+    },
+    likes: {
+      type: Number,
+      default: 0,
+    },
+    avgRatings: {
+      type: Number,
+      default: 0
+    },
+    numOfRatings: {
+      type: Number,
+      default: 0
+    },
+    academicYear: {
       type: String,
     },
     isActive: {

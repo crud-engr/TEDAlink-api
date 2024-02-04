@@ -18,7 +18,7 @@ const auth = async (req, res, next) => {
     //verify the auth user
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
-    const parent = await Parent.findById(decoded.id);
+    const parent = await Parent.findById(decoded._id);
     if (!parent) {
       return res.status(403).json({
         status: 'error',
