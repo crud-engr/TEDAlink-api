@@ -625,11 +625,10 @@ class ParentController {
         });
       }
 
-      const parent = await Parent.findOneAndUpdate(
-        { _id },
-        req.body,
-        { new: true, runValidators: true },
-      );
+      const parent = await Parent.findOneAndUpdate({ _id }, req.body, {
+        new: true,
+        runValidators: true,
+      });
 
       if (!parent) {
         return res.status(404).json({
@@ -804,6 +803,9 @@ class ParentController {
         state: 'required|string',
         lga: 'required|string',
         relationshipToPupil: 'required|string',
+        religion: 'required|string',
+        haveDisability: 'required|boolean',
+        disabilityDescription: 'string',
       };
 
       const validation = new Validator(req.body, rules);
@@ -847,6 +849,9 @@ class ParentController {
         state,
         lga,
         relationshipToPupil,
+        religion,
+        haveDisability,
+        disabilityDescription,
       } = req.body;
 
       const admission = new Admission({
@@ -866,7 +871,20 @@ class ParentController {
         state,
         lga,
         relationshipToPupil,
+        religion,
+        haveDisability,
+        disabilityDescription,
       });
+      if (
+        admission.haveDisability === true &&
+        (!admission.disabilityDescription ||
+          admission.disabilityDescription === '')
+      ) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Disability description is required',
+        });
+      }
       await admission.save();
 
       // Eventually an email will be sent to school here (school.email)
