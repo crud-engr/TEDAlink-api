@@ -41,9 +41,11 @@ class SchoolController {
         videoUrl: 'url',
         history: 'required|string',
         securityMeasure: 'required|string',
+        about: 'required|string',
         schoolFeeDiscount: 'integer',
         minimumSchoolFee: 'required|integer',
         maximumSchoolFee: 'required|integer',
+        applicationFee: 'required|integer',
       };
 
       const validation = new Validator(req.body, rules);
@@ -83,11 +85,13 @@ class SchoolController {
         subjectOffered,
         extracurriculumActivities,
         videoUrl,
+        about,
         history,
         securityMeasure,
         schoolFeeDiscount,
         minimumSchoolFee,
         maximumSchoolFee,
+        applicationFee
       } = req.body;
       const { _id } = req.schoolOwner;
 
@@ -118,6 +122,7 @@ class SchoolController {
           website,
           logo,
           banner,
+          about,
           admissionRequirements,
           curriculums,
           programsOffered,
@@ -138,6 +143,7 @@ class SchoolController {
           maximumSchoolFee,
           longitude: geoData.longitude,
           latitude: geoData.latitude,
+          applicationFee
         });
 
         await school.save();

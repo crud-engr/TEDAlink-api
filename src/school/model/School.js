@@ -101,6 +101,9 @@ const SchoolSchema = new Schema(
     securityMeasure: {
       type: String,
     },
+    about: {
+      type: String,
+    },
     schoolFeeDiscount: {
       type: Number,
     },
@@ -114,6 +117,9 @@ const SchoolSchema = new Schema(
       type: Number,
     },
     latitude: {
+      type: Number,
+    },
+    applicationFee: {
       type: Number,
     },
     isActive: {
