@@ -71,6 +71,17 @@ const AdmissionSchema = new Schema(
       type: String,
       required: true,
     },
+    religion: {
+      type: String,
+      required: true,
+    },
+    haveDisability: {
+      type: Boolean,
+      required: true,
+    },
+    disabilityDescription: {
+      type: String,
+    },
   },
   { timestamps: true },
 );
