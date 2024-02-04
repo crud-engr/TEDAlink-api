@@ -130,9 +130,13 @@ const SchoolSchema = new Schema(
       type: Number,
       default: 0,
     },
-    ratings: {
+    avgRatings: {
       type: Number,
-      default: 0,
+      default: 0
+    },
+    numOfRatings: {
+      type: Number,
+      default: 0
     },
     academicYear: {
       type: String,
