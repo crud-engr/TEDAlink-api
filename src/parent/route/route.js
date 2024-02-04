@@ -15,6 +15,7 @@ router.get('/schools', auth, ParentController.getSchools);
 router.get('/schools/:schoolId', auth, ParentController.getSchool);
 router.post('/schools/:schoolId/enquiry', auth, ParentController.sendSchoolEnquiry);
 router.post('/schools/:schoolId/apply-for-admission', auth, ParentController.applyForAdmission);
+router.post('/schools/:schoolId/review', auth, ParentController.reviewSchool);
 router.patch('/update-password', auth, ParentController.updatePassword);
 router.patch('/update-profile', auth, ParentController.updateProfile);
 
