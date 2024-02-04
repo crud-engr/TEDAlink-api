@@ -45,6 +45,7 @@ class SchoolController {
         schoolFeeDiscount: 'integer',
         minimumSchoolFee: 'required|integer',
         maximumSchoolFee: 'required|integer',
+        applicationFee: 'required|integer',
       };
 
       const validation = new Validator(req.body, rules);
@@ -90,6 +91,7 @@ class SchoolController {
         schoolFeeDiscount,
         minimumSchoolFee,
         maximumSchoolFee,
+        applicationFee
       } = req.body;
       const { _id } = req.schoolOwner;
 
@@ -141,6 +143,7 @@ class SchoolController {
           maximumSchoolFee,
           longitude: geoData.longitude,
           latitude: geoData.latitude,
+          applicationFee
         });
 
         await school.save();
