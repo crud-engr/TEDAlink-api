@@ -17,6 +17,7 @@ const auth = async (req, res, next) => {
 
     //verify the auth user
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    console.log('decoded value: ', decoded)
 
     const parent = await Parent.findById(decoded.id);
     if (!parent) {

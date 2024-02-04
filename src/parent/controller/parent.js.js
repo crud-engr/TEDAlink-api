@@ -341,7 +341,7 @@ class ParentController {
       }
 
       const parentData = {
-        id: parent._id,
+        _id: parent._id,
         email: parent.email,
         userType: parent.userType,
         phone: parent.phone,
@@ -552,10 +552,10 @@ class ParentController {
         });
       }
 
-      const { id } = req.parent;
+      const { _id } = req.parent;
       const { oldPassword, newPassword, confirmPassword } = req.body;
 
-      const parent = await Parent.findById(id);
+      const parent = await Parent.findById(_id);
 
       if (!parent) {
         return res.status(404).json({
@@ -760,7 +760,7 @@ class ParentController {
       const { fullName, email, phone, location, subject, message } = req.body;
 
       const equiry = new Enquiry({
-        parentId: req.parent?.id,
+        parentId: req.parent?._id,
         schoolId: school?._id,
         schoolOwnerId: school?.schoolOwner,
         userType: req.parent?.userType,
@@ -859,7 +859,7 @@ class ParentController {
       } = req.body;
 
       const admission = new Admission({
-        parentId: req.parent?.id,
+        parentId: req.parent?._id,
         schoolId: school?._id,
         schoolOwnerId: school?.schoolOwner,
         firstName,
@@ -944,7 +944,7 @@ class ParentController {
         });
       }
 
-      const parent = await Parent.findById(req.parent.id);
+      const parent = await Parent.findById(req.parent._id);
       if (!parent) {
         return res.status(404).json({
           status: 'failed',
@@ -954,7 +954,7 @@ class ParentController {
 
       const schoolReview = await SchoolReview.findOne({
         schoolId,
-        parentId: req.parent.id,
+        parentId: req.parent._id,
       });
       if (schoolReview) {
         return res.status(400).json({
@@ -964,7 +964,7 @@ class ParentController {
       }
 
       const review = new SchoolReview({
-        parentId: req.parent?.id,
+        parentId: req.parent?._id,
         schoolId: school?._id,
         fullName,
         reviewComment,
@@ -1011,7 +1011,7 @@ class ParentController {
         });
       }
 
-      const parent = await Parent.findById(req.parent.id).session(session);
+      const parent = await Parent.findById(req.parent._id).session(session);
       if (!parent) {
         return res.status(404).json({
           status: 'failed',
@@ -1021,7 +1021,7 @@ class ParentController {
 
       const schoolLike = await SchoolLike.findOne({
         schoolId,
-        parentId: req.parent.id,
+        parentId: req.parent._id,
       }).session(session);
       if (schoolLike) {
         // If already liked, unlike the school
@@ -1034,7 +1034,7 @@ class ParentController {
         await SchoolLike.create(
           [
             {
-              parentId: req.parent?.id,
+              parentId: req.parent?._id,
               schoolId: school?._id,
             },
           ],
@@ -1294,7 +1294,7 @@ class ParentController {
         });
       }
 
-      const parent = await Parent.findById(req.parent.id).session(session);
+      const parent = await Parent.findById(req.parent._id).session(session);
       if (!parent) {
         return res.status(404).json({
           status: 'failed',
@@ -1304,7 +1304,7 @@ class ParentController {
 
       const schoolRating = await SchoolRating.findOne({
         schoolId,
-        parentId: req.parent.id,
+        parentId: req.parent._id,
       }).session(session);
 
       if (schoolRating) {
@@ -1317,7 +1317,7 @@ class ParentController {
       await SchoolRating.create(
         [
           {
-            parentId: req.parent?.id,
+            parentId: req.parent?._id,
             schoolId: school?._id,
             ratingValue,
           },
