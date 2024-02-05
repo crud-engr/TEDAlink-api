@@ -165,9 +165,9 @@ class SchoolOwnerController {
         });
       }
 
-      // const otp = Util.generateOTP();
-      const otp = '656565';
-      // console.log('SCHOOL OWNER ACCOUNT ACTIVATION OTP: ', otp);
+      const otp = Util.generateOTP();
+      // const otp = '656565';
+      console.log('SCHOOL OWNER ACCOUNT ACTIVATION OTP: ', otp);
 
       // Encrypt otp
       const encryptedOtp = crypto
