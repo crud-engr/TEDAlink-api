@@ -18,7 +18,7 @@ const auth = async (req, res, next) => {
     //verify the auth user
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
-    const schoolOwner = await SchoolOwner.findById(decoded.id);
+    const schoolOwner = await SchoolOwner.findById(decoded._id);
     if (!schoolOwner) {
       return res.status(403).json({
         status: 'error',
