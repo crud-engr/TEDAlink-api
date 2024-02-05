@@ -595,13 +595,6 @@ class SchoolOwnerController {
             '-password -createdAt -updatedAt -isActive -isDisabled -userType',
         });
 
-      if (admissions.length === 0) {
-        return res.status(404).json({
-          status: 'failed',
-          message: 'No admissions found',
-        });
-      }
-
       return res.status(200).json({
         status: 'success',
         message: 'Admissions retrieved',

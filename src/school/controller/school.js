@@ -200,13 +200,6 @@ class SchoolController {
         createdAt: -1,
       });
 
-      if (schools.length === 0) {
-        return res.status(404).json({
-          status: 'failed',
-          message: 'No schools found',
-        });
-      }
-
       return res.status(200).json({
         status: 'success',
         message: 'Schools retrieved',
