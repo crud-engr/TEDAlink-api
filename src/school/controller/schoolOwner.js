@@ -342,7 +342,7 @@ class SchoolOwnerController {
       }
 
       const schoolOwnerData = {
-        id: schoolOwner._id,
+        _id: schoolOwner._id,
         email: schoolOwner.email,
         userType: schoolOwner.userType,
         phone: schoolOwner.phone,
@@ -537,8 +537,8 @@ class SchoolOwnerController {
 
   getEnquiries = async (req, res) => {
     try {
-      const { id } = req.schoolOwner;
-      const schoolOwner = await SchoolOwner.findById(id);
+      const { _id } = req.schoolOwner;
+      const schoolOwner = await SchoolOwner.findById(_id);
 
       if (!schoolOwner) {
         return res.status(404).json({
@@ -547,7 +547,7 @@ class SchoolOwnerController {
         });
       }
 
-      const enquiries = await Enquiry.find({ schoolOwnerId: id })
+      const enquiries = await Enquiry.find({ schoolOwnerId: _id })
         .sort({
           createdAt: -1,
         })
@@ -575,8 +575,8 @@ class SchoolOwnerController {
 
   async getAdmissions(req, res) {
     try {
-      const { id } = req.schoolOwner;
-      const schoolOwner = await SchoolOwner.findById(id);
+      const { _id } = req.schoolOwner;
+      const schoolOwner = await SchoolOwner.findById(_id);
 
       if (!schoolOwner) {
         return res.status(404).json({
@@ -585,7 +585,7 @@ class SchoolOwnerController {
         });
       }
 
-      const admissions = await Admission.find({ schoolOwnerId: id })
+      const admissions = await Admission.find({ schoolOwnerId: _id })
         .sort({
           createdAt: -1,
         })
