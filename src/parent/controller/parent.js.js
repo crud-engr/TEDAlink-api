@@ -696,11 +696,14 @@ class ParentController {
         });
       }
 
+      const reviews = await SchoolReview.find({ schoolId }).populate('parentId')
+
       return res.status(200).json({
         status: 'success',
         message: 'School retrieved',
         data: {
           school,
+          reviews
         },
       });
     } catch (error) {
