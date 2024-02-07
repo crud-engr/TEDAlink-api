@@ -7,6 +7,7 @@ const Util = require('../../common/utils/util');
 const SchoolOwner = require('../model/SchoolOwner');
 const School = require('../model/School');
 const ArchiveSchool = require('../model/ArchiveSchool');
+const SchoolReview = require('../model/SchoolReviews');
 require('dotenv').config();
 
 class SchoolController {
@@ -235,11 +236,14 @@ class SchoolController {
         });
       }
 
+      const reviews = await SchoolReview.findOne({ schoolId })
+
       return res.status(200).json({
         status: 'success',
         message: 'School retrieved',
         data: {
           school,
+          reviews
         },
       });
     } catch (error) {
