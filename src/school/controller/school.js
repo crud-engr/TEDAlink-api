@@ -108,10 +108,6 @@ class SchoolController {
       const nextYear = new Date().getFullYear() + 1;
       const academicYear = `${currentYear}/${nextYear}`
 
-      // Get school longitude and latitude
-      const geoData = await this.getLatLng(address);
-
-      if (geoData.latitude && geoData.longitude) {
         const school = new School({
           schoolOwner: _id,
           email,
@@ -146,8 +142,8 @@ class SchoolController {
           schoolFeeDiscount,
           minimumSchoolFee,
           maximumSchoolFee,
-          longitude: geoData.longitude,
-          latitude: geoData.latitude,
+          longitude: 0,
+          latitude: 0,
           applicationFee,
           academicYear
         });
@@ -161,7 +157,6 @@ class SchoolController {
             school,
           },
         });
-      }
     } catch (error) {
       console.log('Create School Error:', error.message);
       return res.status(500).json({
