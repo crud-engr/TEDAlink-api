@@ -12,6 +12,7 @@ const { isValidObjectId } = require('mongoose');
 const School = require('../model/School');
 const Enquiry = require('../../parent/model/Enquiry');
 const Admission = require('../../parent/model/Admission');
+const SchoolReview = require('../model/SchoolReviews');
 
 class SchoolOwnerController {
   async signup(req, res) {
@@ -607,6 +608,61 @@ class SchoolOwnerController {
       return res.status(500).json({
         status: 'failed',
         message: 'Unable to get admissions',
+      });
+    }
+  }
+
+  async getReviews(req, res) {
+    try {
+      const { _id } = req.schoolOwner;
+      const { schoolId } = req.params;
+      const schoolOwner = await SchoolOwner.findById(_id);
+
+      if (!schoolOwner) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'School Owner Not Found',
+        });
+      }
+
+      if (!isValidObjectId(schoolId)) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'School Not Found',
+        });
+      }
+
+      // Display reviews owned by school owner
+      const schoolByOwner = await School.findOne({ schoolOwner: _id })
+      if (!schoolByOwner || schoolByOwner === null) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Unable to get school reviews',
+        });
+      }
+
+      const reviews = await SchoolReview.find({ schoolId })
+        .sort({
+          createdAt: -1,
+        })
+        .populate({
+          path: 'parentId',
+          select:
+            '-password -createdAt -updatedAt -isActive -isDisabled -userType',
+        });
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'Reviews retrieved',
+        data: {
+          reviews,
+        },
+      });
+    } catch (error) {
+      console.log('Error getting reviews:', error.message);
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to get reviews',
       });
     }
   }
