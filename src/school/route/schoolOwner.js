@@ -15,6 +15,8 @@ router.post(
 );
 router.patch('/auth/set-new-password', SchoolOwnerController.setNewPassword);
 
+router.patch('/update-profile', auth, SchoolOwnerController.updateProfile);
+router.patch('/update-password', auth, SchoolOwnerController.updatePassword);
 router.get('/schools/enquiries', auth, SchoolOwnerController.getEnquiries);
 router.get('/schools/admissions', auth, SchoolOwnerController.getAdmissions);
 router.post('/schools', auth, SchoolController.createSchool);

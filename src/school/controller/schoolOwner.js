@@ -666,6 +666,129 @@ class SchoolOwnerController {
       });
     }
   }
+
+  async updatePassword(req, res) {
+    try {
+      const rules = {
+        oldPassword: 'required|string',
+        newPassword: 'required|string',
+        confirmPassword: 'required|string',
+      };
+
+      const validation = new Validator(req.body, rules);
+
+      if (validation.fails()) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Validation Errors',
+          errors: validation.errors.all(),
+        });
+      }
+
+      const { _id } = req.schoolOwner;
+      const { oldPassword, newPassword, confirmPassword } = req.body;
+
+      const schoolOwner = await SchoolOwner.findById(_id);
+
+      if (!schoolOwner) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'School owner not found',
+        });
+      }
+
+      const isOldPasswordCorrect = await bcrypt.compare(
+        oldPassword,
+        schoolOwner.password,
+      );
+
+      if (!isOldPasswordCorrect) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Old password is not correct',
+        });
+      }
+
+      const isOldPasswordEqualsNewPassword = await bcrypt.compare(
+        newPassword,
+        schoolOwner.password,
+      );
+      if (isOldPasswordEqualsNewPassword) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Old password is the same as new password',
+        });
+      }
+
+      if (!Util.isPasswordValid(newPassword)) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Password should be strong',
+        });
+      }
+
+      if (newPassword !== confirmPassword) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Passwords do not match',
+        });
+      }
+
+      // Hash password + salt
+      schoolOwner.password = await bcrypt.hash(newPassword, 10);
+      await schoolOwner.save();
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'Password successfully updated',
+      });
+    } catch (error) {
+      console.log('Error updating password: ', error.message);
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to update password',
+      });
+    }
+  }
+
+  async updateProfile(req, res) {
+    try {
+      const { _id } = req.schoolOwner;
+
+      if (req.body.password || req.body.confirmPassword) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Please Use Update Password Route.',
+        });
+      }
+
+      const schoolOwner = await SchoolOwner.findOneAndUpdate({ _id }, req.body, {
+        new: true,
+        runValidators: true,
+      });
+
+      if (!schoolOwner) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'School owner not found',
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'Profile Successfully Updated',
+        data: {
+          schoolOwner,
+        },
+      });
+    } catch (error) {
+      console.log('Update School Owner Profile Error:', error.message);
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to update school owner profile',
+      });
+    }
+  }
 }
 
 module.exports = new SchoolOwnerController();
