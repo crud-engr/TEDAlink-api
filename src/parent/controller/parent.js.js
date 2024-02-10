@@ -169,7 +169,7 @@ class ParentController {
 
       const otp = Util.generateOTP();
       // const otp = '656565';
-      console.log('USER REGISTRATION OTP: ', otp)
+      console.log('USER REGISTRATION OTP: ', otp);
 
       // Encrypt otp
       const encryptedOtp = crypto
@@ -696,14 +696,16 @@ class ParentController {
         });
       }
 
-      const reviews = await SchoolReview.find({ schoolId }).populate('parentId')
+      const reviews = await SchoolReview.find({ schoolId }).populate(
+        'parentId',
+      );
 
       return res.status(200).json({
         status: 'success',
         message: 'School retrieved',
         data: {
           school,
-          reviews
+          reviews,
         },
       });
     } catch (error) {
@@ -1167,6 +1169,77 @@ class ParentController {
       });
     } finally {
       session.endSession();
+    }
+  }
+
+  async getDashboard(req, res) {
+    try {
+      /**
+       * Returnes schools with highest enquiries order
+       * by number of enquiries in descending order
+       */
+      const topSchools = await School.aggregate([
+        {
+          $lookup: {
+            from: 'enquiries',
+            localField: '_id',
+            foreignField: 'schoolId',
+            as: 'enquiries',
+          },
+        },
+        {
+          $project: {
+            // Include all fields from the School collection
+            school: '$$ROOT',
+            // schoolName: '$name',
+            numberOfEnquiries: { $size: '$enquiries' },
+          },
+        },
+        {
+          $sort: { numberOfEnquiries: -1 },
+        },
+      ]);
+
+      const schoolMetrics = await School.aggregate([
+        {
+          $group: {
+            _id: {
+              $cond: {
+                if: {
+                  $in: [
+                    { $toLower: '$state' },
+                    ['lagos', 'kaduna', 'abuja'],
+                  ],
+                },
+                then: '$state', // Group by state for Lagos, Kaduna, and Abuja
+                else: 'Other States', // Group other states into a separate category
+              },
+            },
+            totalSchools: { $sum: 1 },
+          },
+        },
+      ]);
+
+      // const topProfessionalDisabilities = await Professional.aggregate([])
+      // const topEducators = await Educator.aggregate([])
+      // const topCourses = await Course.aggregate([])
+
+      // Add more data based on what you want on the dashboard.
+
+      return res.status(200).json({
+        status: 'success',
+        message: `Dashboard Retrieved`,
+        data: {
+          topSchools,
+          schoolMetrics
+        },
+      });
+    } catch (error) {
+      console.log('Dashboard Error:', error.message);
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to get dashboard',
+      });
     }
   }
 }
