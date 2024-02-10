@@ -92,7 +92,7 @@ class SchoolController {
         schoolFeeDiscount,
         minimumSchoolFee,
         maximumSchoolFee,
-        applicationFee
+        applicationFee,
       } = req.body;
       const { _id } = req.schoolOwner;
 
@@ -106,57 +106,59 @@ class SchoolController {
 
       const currentYear = new Date().getFullYear();
       const nextYear = new Date().getFullYear() + 1;
-      const academicYear = `${currentYear}/${nextYear}`
+      const academicYear = `${currentYear}/${nextYear}`;
 
-        const school = new School({
-          schoolOwner: _id,
-          email,
-          name,
-          category,
-          type,
-          phone,
-          address,
-          country,
-          state,
-          city,
-          lga,
-          website,
-          logo,
-          banner,
-          about,
-          admissionRequirements,
-          curriculums,
-          programsOffered,
-          scholarships,
-          awards,
-          facilityImages,
-          accountNumber,
-          accountName,
-          bankName,
-          admissionProcedures,
-          subjectOffered,
-          extracurriculumActivities,
-          videoUrl,
-          history,
-          securityMeasure,
-          schoolFeeDiscount,
-          minimumSchoolFee,
-          maximumSchoolFee,
-          longitude: 0,
-          latitude: 0,
-          applicationFee,
-          academicYear
-        });
+      const school = new School({
+        schoolOwner: _id,
+        email,
+        name,
+        category,
+        type,
+        phone,
+        address,
+        country,
+        state,
+        city,
+        lga,
+        website,
+        logo,
+        banner,
+        about,
+        admissionRequirements,
+        curriculums,
+        programsOffered,
+        scholarships,
+        awards,
+        facilityImages,
+        accountNumber,
+        accountName,
+        bankName,
+        admissionProcedures,
+        subjectOffered,
+        extracurriculumActivities,
+        videoUrl,
+        history,
+        securityMeasure,
+        schoolFeeDiscount,
+        minimumSchoolFee,
+        maximumSchoolFee,
+        longitude: 0,
+        latitude: 0,
+        applicationFee,
+        academicYear,
+        longitude: 3.666666,
+        latitude: 6.333333,
+      });
 
-        await school.save();
+      await school.save();
 
-        return res.status(201).json({
-          status: 'success',
-          message: 'School successfully created',
-          data: {
-            school,
-          },
-        });
+      return res.status(201).json({
+        status: 'success',
+        message: 'School successfully created',
+        data: {
+          school,
+        },
+      });
     } catch (error) {
       console.log('Create School Error:', error.message);
       return res.status(500).json({
@@ -231,14 +233,14 @@ class SchoolController {
         });
       }
 
-      const reviews = await SchoolReview.findOne({ schoolId })
+      const reviews = await SchoolReview.findOne({ schoolId });
 
       return res.status(200).json({
         status: 'success',
         message: 'School retrieved',
         data: {
           school,
-          reviews
+          reviews,
         },
       });
     } catch (error) {
