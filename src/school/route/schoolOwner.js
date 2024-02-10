@@ -20,6 +20,7 @@ router.get('/schools/admissions', auth, SchoolOwnerController.getAdmissions);
 router.post('/schools', auth, SchoolController.createSchool);
 router.get('/schools', auth, SchoolController.getSchools);
 router.get('/schools/:schoolId', auth, SchoolController.getSchool);
+router.get('/schools/:schoolId/reviews', auth, SchoolOwnerController.getReviews);
 router.patch('/schools/:schoolId', auth, SchoolController.updateSchool);
 router.delete('/schools/:schoolId', auth, SchoolController.deleteSchool);
 
