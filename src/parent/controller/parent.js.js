@@ -987,7 +987,7 @@ class ParentController {
           status: 'success',
           message: 'Review successfully sent',
           data: {
-            updatedReview,
+            review: updatedReview,
           },
         });
       }
@@ -1174,7 +1174,7 @@ class ParentController {
           status: 'success',
           message: `School rated successfully`,
           data: {
-            updatedReview,
+            review: updatedReview,
           },
         });
       }
