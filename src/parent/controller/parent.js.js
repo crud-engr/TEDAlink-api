@@ -681,6 +681,7 @@ class ParentController {
   // Fetch school
   async getSchool(req, res) {
     try {
+      let { _id } = req.parent;
       let { schoolId } = req.params;
       if (!isValidObjectId(schoolId)) {
         return res.status(400).json({
@@ -688,12 +689,20 @@ class ParentController {
           message: 'Invalid school ID',
         });
       }
+
       const school = await School.findById(schoolId);
       if (!school) {
         return res.status(404).json({
           status: 'failed',
           message: 'School not found',
         });
+      }
+
+      // Increase views by 1 if parent has not viewd before
+      if (!school.parentViews.includes(_id)) {
+        school.views += 1;
+        school.parentViews.push(_id)
+        await school.save();
       }
 
       const reviews = await SchoolReview.find({ schoolId }).populate(
@@ -1175,7 +1184,7 @@ class ParentController {
   async getDashboard(req, res) {
     try {
       /**
-       * Returnes schools with highest enquiries order
+       * Returns schools with highest enquiries order
        * by number of enquiries in descending order
        */
       const topSchools = await School.aggregate([

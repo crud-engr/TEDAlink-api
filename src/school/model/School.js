@@ -16,6 +16,10 @@ const SchoolSchema = new Schema(
     type: {
       type: String,
     },
+    parentViews: {
+      type: Array,
+      default: []
+    },
     email: {
       type: String,
       lowercase: true,

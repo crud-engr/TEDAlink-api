@@ -26,4 +26,6 @@ router.get('/schools/:schoolId/reviews', auth, SchoolOwnerController.getReviews)
 router.patch('/schools/:schoolId', auth, SchoolController.updateSchool);
 router.delete('/schools/:schoolId', auth, SchoolController.deleteSchool);
 
+router.get('/dashboard', auth, SchoolOwnerController.getDashboard);
+
 module.exports = router;
