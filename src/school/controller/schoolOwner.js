@@ -650,6 +650,9 @@ class SchoolOwnerController {
           path: 'parentId',
           select:
             '-password -createdAt -updatedAt -isActive -isDisabled -userType',
+        }).populate({
+          path: 'schoolId',
+          select: '_id name'
         });
 
       return res.status(200).json({
