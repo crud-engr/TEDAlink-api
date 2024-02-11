@@ -29,6 +29,10 @@ const ParentSchema = new Schema(
       type: String,
       required: true,
     },
+    profileImage: {
+      type: String,
+      default: ''
+    },
     phone: {
       type: String,
     },

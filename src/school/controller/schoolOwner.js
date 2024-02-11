@@ -4,6 +4,7 @@ const moment = require('moment');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
+const path = require('path');
 
 const Otp = require('../model/SchoolOwnerOtp');
 const Util = require('../../common/utils/util');
@@ -14,6 +15,7 @@ const School = require('../model/School');
 const Enquiry = require('../../parent/model/Enquiry');
 const Admission = require('../../parent/model/Admission');
 const SchoolReview = require('../model/SchoolReviews');
+const { uploadToCloudinary } = require('../../common/upload');
 
 class SchoolOwnerController {
   async signup(req, res) {
@@ -650,9 +652,10 @@ class SchoolOwnerController {
           path: 'parentId',
           select:
             '-password -createdAt -updatedAt -isActive -isDisabled -userType',
-        }).populate({
+        })
+        .populate({
           path: 'schoolId',
-          select: '_id name'
+          select: '_id name',
         });
 
       return res.status(200).json({
@@ -802,17 +805,21 @@ class SchoolOwnerController {
     try {
       const { _id } = req.schoolOwner;
 
-      const school = await School.findOne({ schoolOwner: _id })
-      const admissions = await Admission.countDocuments({ schoolId: school._id })
-      const enquiries = await Enquiry.countDocuments({ schoolId: school._id })
-      const reviews = await SchoolReview.countDocuments({ schoolId: school._id })
+      const school = await School.findOne({ schoolOwner: _id });
+      const admissions = await Admission.countDocuments({
+        schoolId: school._id,
+      });
+      const enquiries = await Enquiry.countDocuments({ schoolId: school._id });
+      const reviews = await SchoolReview.countDocuments({
+        schoolId: school._id,
+      });
 
       const metrics = {
         views: school?.views || 0,
         admissions: admissions || 0,
         enquiries: enquiries || 0,
-        reviews: reviews || 0
-      }
+        reviews: reviews || 0,
+      };
 
       const subscriptionPlan = req.schoolOwner.plan;
       const schoolName = school?.name;
@@ -823,7 +830,7 @@ class SchoolOwnerController {
         data: {
           metrics,
           subscriptionPlan,
-          schoolName
+          schoolName,
         },
       });
     } catch (error) {
@@ -831,6 +838,210 @@ class SchoolOwnerController {
       return res.status(500).json({
         status: 'failed',
         message: 'Unable to get dashboard',
+      });
+    }
+  }
+
+  async uploadLogo(req, res) {
+    try {
+      const rules = {
+        logo: 'string',
+      };
+
+      const validation = new Validator(req.body, rules);
+
+      if (validation.fails()) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Validation Errors',
+          errors: validation.errors.all(),
+        });
+      }
+
+      if (!req.files) {
+        return res.status(400).send({
+          status: 'failed',
+          message: 'No file uploaded',
+        });
+      }
+
+      const { _id } = req.schoolOwner;
+      const schoolOwner = await SchoolOwner.findById(_id);
+      if (!schoolOwner) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'School owner not found',
+        });
+      }
+
+      const { tempFilePath } = req.files.logo;
+
+      if (!tempFilePath) {
+        return res.status(422).send({
+          status: 'failed',
+          message: 'Cannot process file',
+        });
+      }
+
+      const validExtensions = ['.jpg', '.jpeg', '.png', '.heic', '.webp'];
+
+      const extension = path.extname(req.files.logo.name);
+      if (!validExtensions.includes(extension)) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Invalid file extension',
+        });
+      }
+
+      const url = await uploadToCloudinary(tempFilePath);
+
+      return res.status(201).json({
+        status: 'success',
+        message: 'Logo uploaded successfully',
+        url,
+      });
+    } catch (error) {
+      console.log('Upload Image Error:', error.message);
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to upload image',
+      });
+    }
+  }
+
+  async uploadBanner(req, res) {
+    try {
+      const rules = {
+        banner: 'string',
+      };
+
+      const validation = new Validator(req.body, rules);
+
+      if (validation.fails()) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Validation Errors',
+          errors: validation.errors.all(),
+        });
+      }
+
+      if (!req.files) {
+        return res.status(400).send({
+          status: 'failed',
+          message: 'No file uploaded',
+        });
+      }
+
+      const { _id } = req.schoolOwner;
+      const schoolOwner = await SchoolOwner.findById(_id);
+      if (!schoolOwner) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'School owner not found',
+        });
+      }
+
+      const { tempFilePath } = req.files.banner;
+
+      if (!tempFilePath) {
+        return res.status(422).send({
+          status: 'failed',
+          message: 'Cannot process file',
+        });
+      }
+
+      const validExtensions = ['.jpg', '.jpeg', '.png', '.heic', '.webp'];
+
+      const extension = path.extname(req.files.banner.name);
+      if (!validExtensions.includes(extension)) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Invalid file extension',
+        });
+      }
+
+      const url = await uploadToCloudinary(tempFilePath);
+
+      return res.status(201).json({
+        status: 'success',
+        message: 'Banner uploaded successfully',
+        url,
+      });
+    } catch (error) {
+      console.log('Upload Image Error:', error.message);
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to upload image',
+      });
+    }
+  }
+
+  async uploadFacilityImages(req, res) {
+    try {
+      const rules = {
+        facilityImages: 'string|array',
+      };
+
+      const validation = new Validator(req.body, rules);
+
+      if (validation.fails()) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Validation Errors',
+          errors: validation.errors.all(),
+        });
+      }
+
+      if (!req.files || !req.files.facilityImages) {
+        return res.status(400).send({
+          status: 'failed',
+          message: 'No file uploaded',
+        });
+      }
+
+      const { _id } = req.schoolOwner;
+      const schoolOwner = await SchoolOwner.findById(_id);
+      if (!schoolOwner) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'School owner not found',
+        });
+      }
+
+      const tempFileArray = req.files.facilityImages.map((file) => file.tempFilePath);
+
+      if (tempFileArray.length < 1) {
+        return res.status(400).send({
+          status: 'failed',
+          message: 'Cannot process file',
+        });
+      }
+
+      const validExtensions = ['.jpg', '.jpeg', '.png', '.heic', '.webp'];
+
+      for (const file of req.files.facilityImages) {
+        const extension = path.extname(file.name);
+
+        if (!validExtensions.includes(extension)) {
+          return res.status(400).json({
+            status: 'failed',
+            message: 'Invalid file extension',
+          });
+        }
+      }
+
+      const urls = await uploadToCloudinary(tempFileArray);
+
+      return res.status(201).json({
+        status: 'success',
+        message: 'Facility Images uploaded successfully',
+        urls,
+      });
+    } catch (error) {
+      console.log('Upload Image Error:', error.message);
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to upload image',
       });
     }
   }
