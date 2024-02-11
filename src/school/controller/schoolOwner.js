@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const moment = require('moment');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
 
 const Otp = require('../model/SchoolOwnerOtp');
 const Util = require('../../common/utils/util');
@@ -633,7 +634,7 @@ class SchoolOwnerController {
       }
 
       // Display reviews owned by school owner
-      const schoolByOwner = await School.findOne({ schoolOwner: _id })
+      const schoolByOwner = await School.findOne({ schoolOwner: _id });
       if (!schoolByOwner || schoolByOwner === null) {
         return res.status(400).json({
           status: 'failed',
@@ -762,10 +763,14 @@ class SchoolOwnerController {
         });
       }
 
-      const schoolOwner = await SchoolOwner.findOneAndUpdate({ _id }, req.body, {
-        new: true,
-        runValidators: true,
-      });
+      const schoolOwner = await SchoolOwner.findOneAndUpdate(
+        { _id },
+        req.body,
+        {
+          new: true,
+          runValidators: true,
+        },
+      );
 
       if (!schoolOwner) {
         return res.status(404).json({
@@ -786,6 +791,43 @@ class SchoolOwnerController {
       return res.status(500).json({
         status: 'failed',
         message: 'Unable to update school owner profile',
+      });
+    }
+  }
+
+  async getDashboard(req, res) {
+    try {
+      const { _id } = req.schoolOwner;
+
+      const school = await School.findOne({ schoolOwner: _id })
+      const admissions = await Admission.countDocuments({ schoolId: school._id })
+      const enquiries = await Enquiry.countDocuments({ schoolId: school._id })
+      const reviews = await SchoolReview.countDocuments({ schoolId: school._id })
+
+      const metrics = {
+        views: school?.views || 0,
+        admissions: admissions || 0,
+        enquiries: enquiries || 0,
+        reviews: reviews || 0
+      }
+
+      const subscriptionPlan = req.schoolOwner.plan;
+      const schoolName = school?.name;
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'Dashboard Retrieved',
+        data: {
+          metrics,
+          subscriptionPlan,
+          schoolName
+        },
+      });
+    } catch (error) {
+      console.log('Dashboard Error:', error.message);
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to get dashboard',
       });
     }
   }

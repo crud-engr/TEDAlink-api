@@ -36,6 +36,10 @@ const SchoolOwnerSchema = new Schema(
       type: String,
       default: 'school-owner',
     },
+    plan: {
+      type: String,
+      default: 'free'
+    },
     isActive: {
       type: Boolean,
       default: true,
