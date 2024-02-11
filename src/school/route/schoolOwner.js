@@ -15,6 +15,9 @@ router.post(
 );
 router.patch('/auth/set-new-password', SchoolOwnerController.setNewPassword);
 
+router.post('/upload-logo', auth, SchoolOwnerController.uploadLogo);
+router.post('/upload-banner', auth, SchoolOwnerController.uploadBanner);
+router.post('/upload-facility-images', auth, SchoolOwnerController.uploadFacilityImages);
 router.patch('/update-profile', auth, SchoolOwnerController.updateProfile);
 router.patch('/update-password', auth, SchoolOwnerController.updatePassword);
 router.get('/schools/enquiries', auth, SchoolOwnerController.getEnquiries);

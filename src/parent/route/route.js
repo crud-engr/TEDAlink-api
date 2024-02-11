@@ -20,6 +20,7 @@ router.post('/schools/:schoolId/like', auth, ParentController.toggleLikeSchool);
 router.post('/schools/:schoolId/rate', auth, ParentController.rateSchool);
 router.patch('/update-password', auth, ParentController.updatePassword);
 router.patch('/update-profile', auth, ParentController.updateProfile);
+router.post('/upload-profile-image', auth, ParentController.uploadProfileImage);
 
 router.get('/dashboard', auth, ParentController.getDashboard);
 
