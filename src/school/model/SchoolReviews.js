@@ -8,9 +8,13 @@ const SchoolReviewSchema = new Schema(
       ref: 'Parent',
     },
     schoolId: {
-        type: Schema.Types.ObjectId,
-        ref: 'School',
-      },
+      type: Schema.Types.ObjectId,
+      ref: 'School',
+    },
+    ratingValue: {
+      type: Number,
+      default: 0,
+    },
     reviewComment: {
       type: String,
     },

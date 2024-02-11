@@ -701,7 +701,7 @@ class ParentController {
       // Increase views by 1 if parent has not viewd before
       if (!school.parentViews.includes(_id)) {
         school.views += 1;
-        school.parentViews.push(_id)
+        school.parentViews.push(_id);
         await school.save();
       }
 
@@ -919,8 +919,8 @@ class ParentController {
   async reviewSchool(req, res) {
     try {
       const rules = {
-        fullName: 'required|string',
-        reviewComment: 'required|string',
+        fullName: 'string',
+        reviewComment: 'string',
       };
 
       const validation = new Validator(req.body, rules);
@@ -963,10 +963,32 @@ class ParentController {
         schoolId,
         parentId: req.parent._id,
       });
-      if (schoolReview) {
-        return res.status(400).json({
-          status: 'failed',
-          message: 'Review already created for this school',
+      if (
+        schoolReview &&
+        (!schoolReview.reviewComment ||
+          schoolReview.reviewComment === '' ||
+          schoolReview.reviewComment === null)
+      ) {
+        // return res.status(400).json({
+        //   status: 'failed',
+        //   message: 'Review already created for this school',
+        // });
+        const updatedReview = await SchoolReview.findByIdAndUpdate(
+          { _id: schoolReview._id },
+          {
+            $set: {
+              fullName,
+              reviewComment,
+            },
+          },
+        );
+
+        return res.status(200).json({
+          status: 'success',
+          message: 'Review successfully sent',
+          data: {
+            updatedReview,
+          },
         });
       }
 
@@ -1081,7 +1103,7 @@ class ParentController {
 
     try {
       const rules = {
-        ratingValue: 'required|integer|max:5|min:1',
+        ratingValue: 'integer|max:5|min:1',
       };
 
       const validation = new Validator(req.body, rules);
@@ -1122,28 +1144,62 @@ class ParentController {
         });
       }
 
-      const schoolRating = await SchoolRating.findOne({
+      const schoolReview = await SchoolReview.findOne({
         schoolId,
         parentId: req.parent._id,
       }).session(session);
 
-      if (schoolRating) {
+      // School has been given rate value
+      if (schoolReview && schoolReview.ratingValue > 0) {
         return res.status(400).json({
           status: 'failed',
-          message: 'School has already been rated',
+          message: 'School already rated',
         });
       }
 
-      await SchoolRating.create(
+      // School has NOT been given rate value
+      if (schoolReview && schoolReview.ratingValue === 0) {
+        const updatedReview = await SchoolReview.findByIdAndUpdate(
+          { _id: schoolReview._id },
+          {
+            $set: {
+              ratingValue,
+            },
+          },
+        ).session(session);
+
+        await session.commitTransaction();
+
+        return res.status(200).json({
+          status: 'success',
+          message: `School rated successfully`,
+          data: {
+            updatedReview,
+          },
+        });
+      }
+
+      await SchoolReview.create(
         [
           {
-            parentId: req.parent?._id,
-            schoolId: school?._id,
             ratingValue,
+            schoolId,
+            parentId: req.parent._id,
           },
         ],
         { session },
       );
+
+      // await SchoolRating.create(
+      //   [
+      //     {
+      //       parentId: req.parent?._id,
+      //       schoolId: school?._id,
+      //       ratingValue,
+      //     },
+      //   ],
+      //   { session },
+      // );
 
       // Update school's average rating
       const previousTotalRatings = school.avgRatings * school.numOfRatings;
@@ -1215,10 +1271,7 @@ class ParentController {
             _id: {
               $cond: {
                 if: {
-                  $in: [
-                    { $toLower: '$state' },
-                    ['lagos', 'kaduna', 'abuja'],
-                  ],
+                  $in: [{ $toLower: '$state' }, ['lagos', 'kaduna', 'abuja']],
                 },
                 then: '$state', // Group by state for Lagos, Kaduna, and Abuja
                 else: 'Other States', // Group other states into a separate category
@@ -1240,7 +1293,7 @@ class ParentController {
         message: `Dashboard Retrieved`,
         data: {
           topSchools,
-          schoolMetrics
+          schoolMetrics,
         },
       });
     } catch (error) {
