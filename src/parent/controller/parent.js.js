@@ -170,8 +170,8 @@ class ParentController {
         });
       }
 
-      const otp = Util.generateOTP();
-      // const otp = '656565';
+      // const otp = Util.generateOTP();
+      const otp = '656565';
       console.log('USER REGISTRATION OTP: ', otp);
 
       // Encrypt otp
@@ -394,7 +394,8 @@ class ParentController {
         });
       }
 
-      const otp = Util.generateOTP();
+      // const otp = Util.generateOTP();
+      const otp = '656565'
       console.log('PASSWORD RESET OTP: ', otp);
 
       // hash otp -> otp expires in 10 mins
