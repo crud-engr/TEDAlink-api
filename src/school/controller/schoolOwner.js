@@ -1047,6 +1047,74 @@ class SchoolOwnerController {
       });
     }
   }
+
+  async uploadProfileImage(req, res) {
+    try {
+      const rules = {
+        image: 'string',
+      };
+
+      const validation = new Validator(req.body, rules);
+
+      if (validation.fails()) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Validation Errors',
+          errors: validation.errors.all(),
+        });
+      }
+
+      if (!req.files) {
+        return res.status(400).send({
+          status: 'failed',
+          message: 'No file uploaded',
+        });
+      }
+
+      const { _id } = req.schoolOwner;
+      const schoolOwner = await SchoolOwner.findById(_id);
+      if (!schoolOwner) {
+        return res.status(404).json({
+          status: 'failed',
+          message: 'School owner not found',
+        });
+      }
+
+      const { tempFilePath } = req.files.image;
+
+      // const file = fs.readFileSync(tempFilePath);
+      if (!tempFilePath) {
+        return res.status(422).send({
+          status: 'failed',
+          message: 'Cannot process file',
+        });
+      }
+
+      const validExtensions = ['.jpg', '.jpeg', '.png', '.heic', '.webp'];
+
+      const extension = path.extname(req.files.image.name);
+      if (!validExtensions.includes(extension)) {
+        return res.status(400).json({
+          status: 'failed',
+          message: 'Invalid file extension',
+        });
+      }
+
+      const url = await uploadToCloudinary(tempFilePath);
+
+      return res.status(201).json({
+        status: 'success',
+        message: 'Image uploaded successfully',
+        url,
+      });
+    } catch (error) {
+      console.log('Upload Image Error:', error.message);
+      return res.status(500).json({
+        status: 'failed',
+        message: 'Unable to upload image',
+      });
+    }
+  }
 }
 
 module.exports = new SchoolOwnerController();
