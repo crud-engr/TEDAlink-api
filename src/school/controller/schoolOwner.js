@@ -169,8 +169,8 @@ class SchoolOwnerController {
         });
       }
 
-      const otp = Util.generateOTP();
-      // const otp = '656565';
+      // const otp = Util.generateOTP();
+      const otp = '656565';
       console.log('SCHOOL OWNER ACCOUNT ACTIVATION OTP: ', otp);
 
       // Encrypt otp
@@ -396,7 +396,9 @@ class SchoolOwnerController {
         });
       }
 
-      const otp = Util.generateOTP();
+      // const otp = Util.generateOTP();
+      const otp = "656565"
+
       console.log('SCHOOL OWNER PASSWORD RESET OTP: ', otp);
 
       // hash otp -> otp expires in 10 mins
