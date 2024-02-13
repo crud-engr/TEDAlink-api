@@ -73,22 +73,22 @@ class SchoolOwnerController {
           message: `School owner with ${userName} already exists`,
         });
       }
-      const IsEmailVerified = await SchoolOwnerOtp.findOne({ email });
-      if (!IsEmailVerified) {
-        return res.status(400).json({
-          status: 'failed',
-          message: 'Invalid credentials',
-        });
-      }
-      if (
-        IsEmailVerified.emailIsVerified === false ||
-        IsEmailVerified.userType !== 'school-owner'
-      ) {
-        return res.status(400).json({
-          status: 'failed',
-          message: 'School owner is not verified',
-        });
-      }
+      // const IsEmailVerified = await SchoolOwnerOtp.findOne({ email });
+      // if (!IsEmailVerified) {
+      //   return res.status(400).json({
+      //     status: 'failed',
+      //     message: 'Invalid credentials',
+      //   });
+      // }
+      // if (
+      //   IsEmailVerified.emailIsVerified === false ||
+      //   IsEmailVerified.userType !== 'school-owner'
+      // ) {
+      //   return res.status(400).json({
+      //     status: 'failed',
+      //     message: 'School owner is not verified',
+      //   });
+      // }
       if (!Util.isPasswordValid(password)) {
         return res.status(400).json({
           status: 'failed',

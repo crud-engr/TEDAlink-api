@@ -74,22 +74,22 @@ class ParentController {
           message: `Parent with ${userName} already exists`,
         });
       }
-      const IsEmailVerified = await Otp.findOne({ email });
-      if (!IsEmailVerified) {
-        return res.status(400).json({
-          status: 'failed',
-          message: 'Invalid credentials',
-        });
-      }
-      if (
-        IsEmailVerified.emailIsVerified === false ||
-        IsEmailVerified.userType !== 'parent'
-      ) {
-        return res.status(400).json({
-          status: 'failed',
-          message: 'Parent is not verified',
-        });
-      }
+      // const IsEmailVerified = await Otp.findOne({ email });
+      // if (!IsEmailVerified) {
+      //   return res.status(400).json({
+      //     status: 'failed',
+      //     message: 'Invalid credentials',
+      //   });
+      // }
+      // if (
+      //   IsEmailVerified.emailIsVerified === false ||
+      //   IsEmailVerified.userType !== 'parent'
+      // ) {
+      //   return res.status(400).json({
+      //     status: 'failed',
+      //     message: 'Parent is not verified',
+      //   });
+      // }
       if (!Util.isPasswordValid(password)) {
         return res.status(400).json({
           status: 'failed',
