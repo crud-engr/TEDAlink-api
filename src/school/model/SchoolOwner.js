@@ -40,6 +40,10 @@ const SchoolOwnerSchema = new Schema(
       type: String,
       default: 'free'
     },
+    profileImage: {
+      type: String,
+      default: ''
+    },
     isActive: {
       type: Boolean,
       default: true,
